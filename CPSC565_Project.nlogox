@@ -51,9 +51,9 @@ to draw-continents
   draw-landmass -9 -1 -8 1     ;; Central America
 
   ;; --- South America ---
-  draw-landmass -7 -12 -3 -1   ;; main body
-  draw-landmass -6 -14 -4 -12  ;; southern tip
-  draw-landmass -5 -1 -3 1     ;; northern part (Colombia/Venezuela)
+  draw-landmass -8 -12 -4 -2   ;; main body
+  draw-landmass -7 -14 -5 -12  ;; southern tip
+  draw-landmass -7 -2 -4 0     ;; northern part (Colombia/Venezuela)
 
   ;; --- Europe ---
   draw-landmass -1 8 6 14      ;; main body
@@ -62,9 +62,9 @@ to draw-continents
   draw-landmass 0 5 4 7        ;; Iberian/Italy area
 
   ;; --- Africa ---
-  draw-landmass -2 -10 5 5     ;; main body
-  draw-landmass -1 -12 3 -10   ;; southern tip
-  draw-landmass 5 0 7 4        ;; Horn of Africa
+  draw-landmass 0 -10 5 4      ;; main body
+  draw-landmass 1 -12 4 -10    ;; southern tip
+  draw-landmass 5 0 7 3        ;; Horn of Africa
 
   ;; --- Asia ---
   draw-landmass 6 4 16 14      ;; Russia / Northern Asia
@@ -98,12 +98,12 @@ to place-airports
     (list -10 8  "JFK")     ;; New York, USA
     (list -9  4  "LAX")     ;; Los Angeles, USA
     (list -8  1  "MEX")     ;; Mexico City
-    (list -5 -4  "GRU")     ;; São Paulo, Brazil
-    (list -4 -11 "EZE")     ;; Buenos Aires, Argentina
+    (list -6 -5  "GRU")     ;; São Paulo, Brazil
+    (list -5 -11 "EZE")     ;; Buenos Aires, Argentina
     (list  2  10 "LHR")     ;; London, UK
     (list  4  8  "CDG")     ;; Paris, France
-    (list  1  1  "CAI")     ;; Cairo, Egypt
-    (list  2 -6  "JNB")     ;; Johannesburg, South Africa
+    (list  2  2  "CAI")     ;; Cairo, Egypt
+    (list  3 -7  "JNB")     ;; Johannesburg, South Africa
     (list  7  5  "DXB")     ;; Dubai, UAE
     (list  9  10 "SVO")     ;; Moscow, Russia
     (list 11  1  "BOM")     ;; Mumbai, India
@@ -148,10 +148,10 @@ to place-controllers
     (list -11 12)    ;; Northern Canada ATC
     (list -10 6)     ;; US East Coast ATC
     (list -7  2)     ;; Central America ATC
-    (list -6 -8)     ;; South America ATC
+    (list -7 -8)     ;; South America ATC
     (list  0  12)    ;; North Atlantic ATC
     (list  3  6)     ;; European ATC
-    (list  1 -3)     ;; Central Africa ATC
+    (list  2 -3)     ;; Central Africa ATC
     (list  6  3)     ;; Middle East ATC
     (list  8  12)    ;; Russia West ATC
     (list 12  8)     ;; East Asia ATC
