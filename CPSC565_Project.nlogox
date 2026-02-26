@@ -1,46 +1,252 @@
 <?xml version="1.0" encoding="utf-8"?>
 <model version="NetLogo 7.0.3" snapToGrid="true">
-  <code></code>
+  <code><![CDATA[
+
+globals [
+  airport-locations    ;; list of [x y name] for each airport
+  controller-locations ;; list of [x y] for each ATC
+]
+
+patches-own [
+  is-land?       ;; true if this patch is land
+  is-airport?    ;; true if this patch is an airport
+  is-controller? ;; true if this patch is an air traffic controller zone
+  airport-name   ;; name label for airport patches
+]
+
+;; Setup
+to setup
+  clear-all
+
+  ;; Step 1: Paint the ocean (blue background)
+  ask patches [
+    set pcolor 87  ;; blue ocean
+    set is-land? false
+    set is-airport? false
+    set is-controller? false
+    set airport-name ""
+  ]
+
+  ;; Step 2: Draw continents as green land masses
+  draw-continents
+
+  ;; Step 3: Place airports (yellow patches)
+  place-airports
+
+  ;; Step 4: Place air traffic controllers (red patches)
+  place-controllers
+
+  reset-ticks
+end
+
+;; Drawing continents
+;; Simplified world map on a 33x33 grid (-16 to 16)
+
+to draw-continents
+
+  ;; --- North America ---
+  draw-landmass -14 6 -6 14    ;; main body (Canada/US)
+  draw-landmass -12 3 -7 6     ;; southern US
+  draw-landmass -10 1 -8 3     ;; Mexico
+  draw-landmass -9 -1 -8 1     ;; Central America
+
+  ;; --- South America ---
+  draw-landmass -7 -12 -3 -1   ;; main body
+  draw-landmass -6 -14 -4 -12  ;; southern tip
+  draw-landmass -5 -1 -3 1     ;; northern part (Colombia/Venezuela)
+
+  ;; --- Europe ---
+  draw-landmass -1 8 6 14      ;; main body
+  draw-landmass -2 6 3 8       ;; southern Europe
+  draw-landmass 6 8 8 12       ;; Scandinavia-ish
+  draw-landmass 0 5 4 7        ;; Iberian/Italy area
+
+  ;; --- Africa ---
+  draw-landmass -2 -10 5 5     ;; main body
+  draw-landmass -1 -12 3 -10   ;; southern tip
+  draw-landmass 5 0 7 4        ;; Horn of Africa
+
+  ;; --- Asia ---
+  draw-landmass 6 4 16 14      ;; Russia / Northern Asia
+  draw-landmass 5 0 12 5       ;; Middle East / Central Asia
+  draw-landmass 10 -2 14 4     ;; India / Southeast Asia
+  draw-landmass 13 2 16 8      ;; China / East Asia
+  draw-landmass 14 -1 16 2     ;; Southeast Asia extension
+
+  ;; --- Australia ---
+  draw-landmass 10 -12 15 -7   ;; main body
+  draw-landmass 13 -7 15 -6    ;; northern bit
+
+end
+
+;; green (land)
+to draw-landmass [x1 y1 x2 y2]
+  ask patches [
+    if pxcor >= x1 and pxcor <= x2 and pycor >= y1 and pycor <= y2 [
+      set pcolor 55     ;; green land
+      set is-land? true
+    ]
+  ]
+end
+
+;; airports: (Yellow patches with labels)
+
+to place-airports
+  ;; Define airport locations: [x y "name"]
+  set airport-locations (list
+    (list -12 10 "YYC")     ;; Calgary, Canada
+    (list -10 8  "JFK")     ;; New York, USA
+    (list -9  4  "LAX")     ;; Los Angeles, USA
+    (list -8  1  "MEX")     ;; Mexico City
+    (list -5 -4  "GRU")     ;; São Paulo, Brazil
+    (list -4 -11 "EZE")     ;; Buenos Aires, Argentina
+    (list  2  10 "LHR")     ;; London, UK
+    (list  4  8  "CDG")     ;; Paris, France
+    (list  1  1  "CAI")     ;; Cairo, Egypt
+    (list  2 -6  "JNB")     ;; Johannesburg, South Africa
+    (list  7  5  "DXB")     ;; Dubai, UAE
+    (list  9  10 "SVO")     ;; Moscow, Russia
+    (list 11  1  "BOM")     ;; Mumbai, India
+    (list 14  6  "PEK")     ;; Beijing, China
+    (list 15  3  "HKG")     ;; Hong Kong
+    (list 13 -10 "SYD")     ;; Sydney, Australia
+  )
+
+  ;; Paint each airport location yellow and label it
+  foreach airport-locations [ loc ->
+    let ax item 0 loc
+    let ay item 1 loc
+    let aname item 2 loc
+
+    ;; Make a 1-patch airport marker (yellow)
+    ask patch ax ay [
+      set pcolor 45          ;; yellow
+      set is-airport? true
+      set is-land? true
+      set airport-name aname
+    ]
+
+    ;; Create a label turtle at the airport
+    ask patch ax ay [
+      sprout 1 [
+        set shape "circle"
+        set size 0.01
+        set color yellow
+        set label aname
+        set label-color white
+      ]
+    ]
+  ]
+end
+
+;; air traffic controllers (Red patches)
+;; Controllers are placed on land between airports
+
+to place-controllers
+  ;; Define ATC positions on land, spread around the map
+  set controller-locations (list
+    (list -11 12)    ;; Northern Canada ATC
+    (list -10 6)     ;; US East Coast ATC
+    (list -7  2)     ;; Central America ATC
+    (list -6 -8)     ;; South America ATC
+    (list  0  12)    ;; North Atlantic ATC
+    (list  3  6)     ;; European ATC
+    (list  1 -3)     ;; Central Africa ATC
+    (list  6  3)     ;; Middle East ATC
+    (list  8  12)    ;; Russia West ATC
+    (list 12  8)     ;; East Asia ATC
+    (list 12 -1)     ;; South Asia ATC
+    (list 12 -9)     ;; Australia ATC
+  )
+
+  ;; Only place up to NumOfAirTrafficControllers controllers
+  let num-to-place min (list NumOfAirTrafficControllers length controller-locations)
+  let placed 0
+
+  foreach controller-locations [ loc ->
+    if placed < num-to-place [
+      let cx item 0 loc
+      let cy item 1 loc
+
+      ask patch cx cy [
+        if is-land? and not is-airport? [
+          set pcolor 15          ;; red
+          set is-controller? true
+
+          ;; Create an ATC label
+          sprout 1 [
+            set shape "circle"
+            set size 0.01
+            set color red
+            set label "ATC"
+            set label-color white
+          ]
+        ]
+      ]
+      set placed placed + 1
+    ]
+  ]
+end
+
+
+;; GO (main simulation loop)
+
+to go
+  ;; left it in for the future: airplane movement, collision detection, ATC routing
+  tick
+end
+]]></code>
   <widgets>
-    <view x="368" wrappingAllowedX="true" y="10" frameRate="30.0" minPycor="-16" height="434" showTickCounter="true" patchSize="13.0" fontSize="10" wrappingAllowedY="true" width="434" tickCounterLabel="ticks" maxPycor="16" updateMode="0" maxPxcor="16" minPxcor="-16"></view>
-    <slider x="870" step="1" y="35" max="100" width="250" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="50.0" variable="NumOfAirplanes"></slider>
-    <slider x="870" step="1" y="110" max="100" width="250" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="50.0" variable="NumOfAirTrafficControllers"></slider>
+    <view x="240" wrappingAllowedX="true" y="10" frameRate="30.0" minPycor="-16" height="530" showTickCounter="true" patchSize="16.0" fontSize="10" wrappingAllowedY="true" width="530" tickCounterLabel="ticks" maxPycor="16" updateMode="1" maxPxcor="16" minPxcor="-16"></view>
+    <button x="10" y="10" width="100" height="50" display="Setup" forever="false" kind="Observer" disableUntilTicks="false">setup</button>
+    <button x="120" y="10" width="100" height="50" display="Go" forever="true" kind="Observer" disableUntilTicks="true">go</button>
+    <slider x="10" step="1" y="80" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="50.0" variable="NumOfAirplanes"></slider>
+    <slider x="10" step="1" y="150" max="20" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="12.0" variable="NumOfAirTrafficControllers"></slider>
+    <monitor x="10" y="220" width="210" height="45" display="Number of Airports" precision="0" fontSize="11">count patches with [is-airport?]</monitor>
+    <monitor x="10" y="280" width="210" height="45" display="Active Controllers" precision="0" fontSize="11">count patches with [is-controller?]</monitor>
   </widgets>
   <info>## WHAT IS IT?
 
-This is a 2D representation of simulating Airplane Travel and the ability of Airplanes to act as a swarm
+A 2D simulation of air traffic modeling emergent rules and the role of Air Traffic Controllers.
+Part of CPSC 565 Emergent Systems - Group 4 (Julian Fan, Elda Britu, Harshini Poluri).
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+The world map is drawn with:
+- **Green patches** representing land (continents)
+- **Yellow patches** representing airports (labeled with IATA codes)
+- **Red patches** representing Air Traffic Controller (ATC) stations
+
+Airports are placed at approximate real-world locations. ATC stations are spread across land areas between airports.
 
 ## HOW TO USE IT
 
-Set the number of Airplanes and Air Traffic Controllers using the sliders
+1. Set the number of Air Traffic Controllers using the slider
+2. Click **Setup** to generate the world map with airports and controllers
+3. The monitors show the count of airports and active controllers
 
 ## THINGS TO NOTICE
 
-(suggested things for the user to notice while running the model)
+- Airports are labeled with real IATA codes (e.g., YYC for Calgary, JFK for New York)
+- ATC stations are placed on land between airports to simulate en-route controllers
+- The number of active controllers can be adjusted with the slider
 
 ## THINGS TO TRY
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+- Change the NumOfAirTrafficControllers slider and click Setup to see different controller configurations
+- Observe how controller coverage changes with fewer ATCs
 
 ## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
-
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
+- Add airplane agents that fly between airports
+- Implement collision detection
+- Add ATC range-of-influence visualization
+- Track flight safety metrics
 
 ## CREDITS AND REFERENCES
 
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+CPSC 565 Emergent Systems - University of Calgary
+Group 4: Julian Fan, Elda Britu (30158734), Harshini Poluri (30188914)
 </info>
   <turtleShapes>
     <shape name="default" rotatable="true" editableColorIndex="0">
@@ -875,5 +1081,5 @@ Set the number of Airplanes and Air Traffic Controllers using the sliders
       </indicator>
     </shape>
   </linkShapes>
-  <previewCommands>setup repeat 75 [ go ]</previewCommands>
+  <previewCommands>setup</previewCommands>
 </model>
