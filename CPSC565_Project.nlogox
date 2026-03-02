@@ -15,6 +15,8 @@ patches-own [
   is-airport?    ;; true if this patch is an airport
   is-controller? ;; true if this patch is an air traffic controller zone
   airport-name   ;; name label for airport patches
+  crash-occured? ;; true if a crash took place in the patch
+  redRgb         ;; red rgb value
 ]
 
 turtles-own [
@@ -40,6 +42,7 @@ to setup
     set is-airport? false
     set is-controller? false
     set airport-name ""
+    set crash-occured? false
   ]
 
   ;; Step 2: Draw continents as green land masses
@@ -51,6 +54,14 @@ to setup
   ;; Step 4: Place air traffic controllers (red patches)
   place-controllers
 
+  ;; Setting the redRgb value for all patches (used by color-correct method)
+  ask patches [
+    let current-rgb ifelse-value (is-list? pcolor) 
+                     [ pcolor ] 
+                     [ extract-rgb pcolor ]
+    set redRgb (item 0 current-rgb)
+  ]
+  
   reset-ticks
 end
 
@@ -290,6 +301,19 @@ to update-position
   if (lx2 - xcor) != 0 or (ly2 - ycor) != 0 [
     facexy lx2 ly2
   ]
+  let numOfTurtles 0
+  ask patch-ahead 1 [
+      set numOfTurtles count turtles-here
+   ]
+  if numOfTurtles > 0 [
+    let rand random 1
+    ifelse rand = 0 [ 
+      right 10
+    ] 
+    [ 
+      left 10
+    ]
+  ]
 end
 
 ;; Move all planes one tick----------------------
@@ -325,10 +349,47 @@ to check-collisions
     if count nearby >= 2 [
       set total-crashes total-crashes + 1
       ask nearby [ set crashed? true ]
+      set crash-occured? true
     ]
   ]
   ;; Remove crashed planes
   ask planes with [crashed?] [ die ]
+  
+end
+
+to explode
+  ask patches [ 
+    let current-rgb ifelse-value (is-list? pcolor) 
+                     [ pcolor ] 
+                     [ extract-rgb pcolor ]
+    let newRed (item 0 current-rgb)
+    
+    if crash-occured? [
+      set newRed newRed + 100
+      if newRed > 255 [
+        set newRed 255
+      ]
+      set pcolor (rgb newRed item 1 current-rgb item 2 current-rgb)
+      set crash-occured? false
+    ]
+    if newRed > (item 0 current-rgb) [
+      set newRed newRed - 10
+    ]
+  ]
+end
+
+to color-correct
+  ask patches [ 
+    let current-rgb ifelse-value (is-list? pcolor) 
+                     [ pcolor ] 
+                     [ extract-rgb pcolor ]
+    let newRed (item 0 current-rgb)
+    if newRed > redRgb [
+      set newRed newRed - 0.75
+      set pcolor (rgb newRed item 1 current-rgb item 2 current-rgb)
+    ]
+  ]
+    
 end
 
 ;; GO (main simulation loop)
@@ -337,6 +398,8 @@ to go
   spawn-airplanes
   move-planes
   check-collisions
+  explode
+  color-correct
   tick
 end
 
@@ -345,8 +408,8 @@ end
     <view x="240" wrappingAllowedX="true" y="10" frameRate="30.0" minPycor="-16" height="530" showTickCounter="true" patchSize="16.0" fontSize="10" wrappingAllowedY="true" width="530" tickCounterLabel="ticks" maxPycor="16" updateMode="1" maxPxcor="16" minPxcor="-16"></view>
     <button x="10" y="10" height="50" disableUntilTicks="false" forever="false" kind="Observer" width="100" display="Setup">setup</button>
     <button x="120" y="10" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
-    <slider x="10" step="1" y="80" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="5.0" variable="NumOfAirplanes"></slider>
-    <slider x="10" step="1" y="150" max="20" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="12.0" variable="NumOfAirTrafficControllers"></slider>
+    <slider x="10" step="1" y="80" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="11.0" variable="NumOfAirplanes"></slider>
+    <slider x="10" step="1" y="150" max="12" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="12.0" variable="NumOfAirTrafficControllers"></slider>
     <monitor x="10" precision="0" y="220" height="60" fontSize="11" width="100" display="Airports">count patches with [is-airport?]</monitor>
     <monitor x="120" precision="0" y="220" height="60" fontSize="11" width="100" display="Controllers">count patches with [is-controller?]</monitor>
     <monitor x="10" precision="0" y="280" height="60" fontSize="11" width="100" display="Active Planes">count planes</monitor>
