@@ -16,6 +16,8 @@ patches-own [
   airport-name   ;; name label for airport patches
   crash-occured? ;; true if a crash took place in the patch
   redRgb         ;; red rgb value
+  blueRgb         ;; blue rgb value
+  greenRgb         ;; green rgb value
   is-controller? ;; true if this patch is an air traffic controller zone
 ]
 
@@ -24,12 +26,14 @@ turtles-own [
   origin-y            ;; starting airport y
   dest-x              ;; destination airport x
   dest-y              ;; destination airport y
+  dest                ;; destination airport patch
   flight-progress     ;; 0.0 = just departed, 1.0 = arrived
   flight-speed        ;; progress per tick (controls plane speed)
   arc-factor          ;; curvature magnitude and direction of the path
   crashed?            ;; flagged for removal after collision
   in-collision-course?;; tracking if detected that another plane is in front of it (used by Air Traffic Controllers to warn planes)
   ahead-patches       ;; their path forward
+  takeoff-allowed?    ;; boolean that ensures only 1 aircraft leaves an airport at a time
 ]
 
 ;; Setup
@@ -65,6 +69,8 @@ to setup
                      [ pcolor ] 
                      [ extract-rgb pcolor ]
     set redRgb (item 0 current-rgb)
+    set greenRgb (item 1 current-rgb)
+    set blueRgb (item 2 current-rgb)
   ]
   
   reset-ticks
@@ -162,7 +168,7 @@ to place-airports
       sprout 1 [
         set shape "circle"
         set size 0.01
-        set color yellow
+        set pcolor yellow
         set label aname
         set label-color white
       ]
@@ -207,7 +213,7 @@ to place-controllers
         sprout 1 [
           set shape "circle"
           set size 0.01
-          set color red
+          set pcolor blue
           set label "ATC"
           set label-color white
         ]
@@ -245,6 +251,8 @@ to spawn-airplanes
       set origin-y item 1 src
       set dest-x   item 0 dst
       set dest-y   item 1 dst
+      
+      set dest patch item 0 dst item 1 dst
 
       ;; Stagger departure progress so planes don't all start at origin
       set flight-progress random-float 1.0
@@ -254,6 +262,10 @@ to spawn-airplanes
       set arc-factor (random-float 4 - 2)
       set crashed? false
       set in-collision-course? false
+      set takeoff-allowed? false
+      
+      ;; Set location at the airport
+      setxy origin-x origin-y
 
       ;; Place at correct position along arc immediately
       update-position
@@ -275,64 +287,101 @@ to update-position
   let d sqrt (delta-x * delta-x + delta-y * delta-y)
 
   ;; Linear interpolation
-  let lx origin-x + t * delta-x
-  let ly origin-y + t * delta-y
+  ;let lx origin-x + t * delta-x
+  ;let ly origin-y + t * delta-y
 
   ;; Add perpendicular arc offset: sin(t*π) peaks at midpoint → 0 at both ends
-  if d > 0 [
-    let perp-x (- delta-y / d)
-    let perp-y (  delta-x / d)
-    let offset sin (t * 180) * arc-factor
-    set lx lx + perp-x * offset
-    set ly ly + perp-y * offset
-  ]
+  ;if d > 0 [
+    ;let perp-x (- delta-y / d)
+    ;let perp-y (  delta-x / d)
+    ;let offset sin (t * 180) * arc-factor
+    ;set lx lx + perp-x * offset
+    ;set ly ly + perp-y * offset
+  ;]
 
   ;; Clamp to world bounds
-  set lx max (list (min-pxcor) (min (list max-pxcor lx)))
-  set ly max (list (min-pycor) (min (list max-pycor ly)))
+  ;set lx max (list (min-pxcor) (min (list max-pxcor lx)))
+  ;set ly max (list (min-pycor) (min (list max-pycor ly)))
 
-  setxy lx ly
+  ;setxy lx ly
 
   ;; Face the direction of travel (look slightly ahead on the arc)
-  let t2 min (list 1.0 (t + 0.02))
-  let lx2 origin-x + t2 * delta-x
-  let ly2 origin-y + t2 * delta-y
-  if d > 0 [
-    let perp-x2 (- delta-y / d)
-    let perp-y2 (  delta-x / d)
-    let offset2 sin (t2 * 180) * arc-factor
-    set lx2 lx2 + perp-x2 * offset2
-    set ly2 ly2 + perp-y2 * offset2
-  ]
-  if (lx2 - xcor) != 0 or (ly2 - ycor) != 0 [
-    facexy lx2 ly2
-  ]
+  ;let t2 min (list 1.0 (t + 0.02))
+  ;let lx2 origin-x + t2 * delta-x
+  ;let ly2 origin-y + t2 * delta-y
+  ;if d > 0 [
+  ;  let perp-x2 (- delta-y / d)
+  ;  let perp-y2 (  delta-x / d)
+  ;  let offset2 sin (t2 * 180) * arc-factor
+  ;  set lx2 lx2 + perp-x2 * offset2
+  ;  set ly2 ly2 + perp-y2 * offset2
+  ;]
+  ;if (lx2 - xcor) != 0 or (ly2 - ycor) != 0 [
+  ;  facexy lx2 ly2
+  ;]
   
-  ;; Collision detection code: The planes have a limited sight ahead of them.
-  let numOfTurtles 0
-  ask patch-ahead 1 [
-      set numOfTurtles count turtles-here
-   ]
-  if numOfTurtles > 0 [
-    let rand random 1
-    ifelse rand = 0 [ 
-      right 10
-    ] 
-    [ 
-      left 10
+  if takeoff-allowed? [
+    ;; Collision detection code: The planes have a limited sight ahead of them.
+    let numOfTurtles 0
+    set ahead-patches n-values AircraftPerceptionRange [ i ->
+      patch-ahead (i + 1)
     ]
-  ]
-  
-  ;; Collision detection based on what the air traffic controller tells them
-  if in-collision-course? [
-    let rand random 1
-    ifelse rand = 0 [ 
-      right 10
-    ] 
-    [ 
-      left 10
+    let index 0
+    let collision-detected false
+    while [index <  length ahead-patches] [
+      if count other planes-on item index ahead-patches > 0 [
+        set collision-detected true
+      ]
+      
+      set index index + 1
     ]
-    set in-collision-course? false
+    if collision-detected = true [
+      set color orange
+      let rand random 1
+      ifelse rand = 0 [ 
+        right 15
+      ] 
+      [ 
+        left 15
+      ]
+    ]
+    
+    ;; Collision detection based on what the air traffic controller tells them
+    if in-collision-course? [
+      set ahead-patches n-values AirTrafficControllerRange [ i ->
+        patch-ahead (i + 1)
+      ]
+      set index 0
+      set collision-detected false
+      while [index <  length ahead-patches] [
+        ask item index ahead-patches [
+          let current-rgb ifelse-value (is-list? pcolor) 
+                        [ pcolor ] 
+          [ extract-rgb pcolor ]
+          if item 0 current-rgb > 200 [
+            set collision-detected true
+          ]
+        ]
+        set index index + 1
+      ]
+      if collision-detected = true [
+        set color orange
+        let rand random 1
+        ifelse rand = 0 [ 
+          right 30
+        ] 
+        [ 
+          left 30
+        ]
+      ]
+      set in-collision-course? false
+    ]
+    
+    if collision-detected = false [
+      facexy dest-x dest-y
+      set color white
+    ]
+    fd 0.1
   ]
 end
 
@@ -343,7 +392,8 @@ to move-planes
     set flight-progress flight-progress + flight-speed
 
     ;; If arrived at destination, pick a new one and continue flying
-    if flight-progress >= 1 [
+    ;if flight-progress >= 1 [
+    if patch-here = dest [
       let new-dest one-of airport-locations
       while [item 0 new-dest = dest-x and item 1 new-dest = dest-y] [
         set new-dest one-of airport-locations
@@ -354,6 +404,8 @@ to move-planes
       set dest-y item 1 new-dest
       set flight-progress 0
       set arc-factor (random-float 4 - 2)
+      
+      set dest patch item 0 new-dest item 1 new-dest
     ]
 
     update-position
@@ -385,15 +437,8 @@ to explode
     let newRed (item 0 current-rgb)
     
     if crash-occured? [
-      set newRed newRed + 100
-      if newRed > 255 [
-        set newRed 255
-      ]
-      set pcolor (rgb newRed item 1 current-rgb item 2 current-rgb)
+      set pcolor black
       set crash-occured? false
-    ]
-    if newRed > (item 0 current-rgb) [
-      set newRed newRed - 10
     ]
   ]
 end
@@ -404,10 +449,33 @@ to color-correct
                      [ pcolor ] 
                      [ extract-rgb pcolor ]
     let newRed (item 0 current-rgb)
+    let newGreen (item 1 current-rgb)
+    let newBlue (item 2 current-rgb)
+    
+    
     if newRed > redRgb [
       set newRed newRed - 0.75
-      set pcolor (rgb newRed item 1 current-rgb item 2 current-rgb)
     ]
+    if newRed < redRgb [
+      set newRed newRed + 0.75
+    ]
+    
+    if newBlue > blueRgb [
+      set newBlue newBlue - 0.75
+    ]
+    if newBlue < blueRgb [
+      set newBlue newBlue + 0.75
+    ]
+    
+    if newGreen > greenRgb [
+      set newGreen newGreen - 0.75
+    ]
+    if newGreen < greenRgb [
+      set newGreen newGreen + 0.75
+    ]
+    
+    
+    set pcolor (rgb newRed newGreen newBlue)
   ]
     
 end
@@ -420,6 +488,7 @@ to air-traffic-control-operations
       let planes-nearby planes-on (patches in-radius AirTrafficControllerRange)
       let planeCount count planes-nearby
       if planeCount > 1 [
+        let legit-collision false
         ask planes-nearby [
           ; Get each planes' forward trajectory
           set ahead-patches n-values AirTrafficControllerRange [ i ->
@@ -433,23 +502,52 @@ to air-traffic-control-operations
             let index 0
             while [index <  length ahead-patches] [
               if item index ahead-patches = item index [ahead-patches] of myself [
-                set in-collision-course? true
+                
+                
+                ask item index ahead-patches [
+                  if not is-airport? [
+                    set legit-collision true
+                    ;Marking the spots where a crash will occur to red
+                    set pcolor red
+                  ]
+                ]
+                if legit-collision = true [
+                  stop
+                ]
               ]
               set index index + 1
             ]
           ]
+          
+          if legit-collision = true [
+            set in-collision-course? true
+          ]
+          
         ]
       ]
     ]
   ]
 end
 
- 
+to takeoff
+  ask patches with [is-airport?] [
+    let planeSet planes-here
+    if count planeSet > 0 [
+      ask planeSet [
+        set takeoff-allowed? false
+      ]
+      ask first sort planeSet [
+        set takeoff-allowed? true
+      ]
+    ]
+  ]
+end
 
 ;; GO (main simulation loop)
 
 to go
   spawn-airplanes
+  takeoff
   air-traffic-control-operations
   move-planes
   check-collisions
@@ -464,12 +562,13 @@ end
     <button x="10" y="10" height="50" disableUntilTicks="false" forever="false" kind="Observer" width="100" display="Setup">setup</button>
     <button x="120" y="10" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
     <slider x="10" step="1" y="80" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="20.0" variable="NumOfAirplanes"></slider>
-    <slider x="10" step="1" y="150" max="12" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="12.0" variable="NumOfAirTrafficControllers"></slider>
+    <slider x="10" step="1" y="150" max="12" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="4.0" variable="NumOfAirTrafficControllers"></slider>
     <monitor x="10" precision="0" y="220" height="60" fontSize="11" width="100" display="Airports">count patches with [is-airport?]</monitor>
     <monitor x="120" precision="0" y="220" height="60" fontSize="11" width="100" display="Controllers">count patches with [is-controller?]</monitor>
     <monitor x="10" precision="0" y="280" height="60" fontSize="11" width="100" display="Active Planes">count planes</monitor>
     <monitor x="120" precision="0" y="280" height="60" fontSize="11" width="100" display="Total Crashes">total-crashes</monitor>
-    <slider x="10" step="1" y="355" max="100" width="210" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="5.0" variable="AirTrafficControllerRange"></slider>
+    <slider x="10" step="1" y="355" max="100" width="210" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="6.0" variable="AirTrafficControllerRange"></slider>
+    <slider x="10" step="1" y="415" max="10" width="210" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="4.0" variable="AircraftPerceptionRange"></slider>
   </widgets>
   <info>## WHAT IS IT?
 
