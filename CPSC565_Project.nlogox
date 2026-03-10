@@ -16,9 +16,10 @@ patches-own [
   airport-name   ;; name label for airport patches
   crash-occured? ;; true if a crash took place in the patch
   redRgb         ;; red rgb value
-  blueRgb         ;; blue rgb value
-  greenRgb         ;; green rgb value
+  blueRgb        ;; blue rgb value
+  greenRgb       ;; green rgb value
   is-controller? ;; true if this patch is an air traffic controller zone
+  incoming-plane ;; The plane set for collision course.
 ]
 
 turtles-own [
@@ -328,17 +329,28 @@ to update-position
     ]
     let index 0
     let collision-detected false
+    
     while [index <  length ahead-patches] [
       if count other planes-on item index ahead-patches > 0 [
         set collision-detected true
+        set incoming-plane one-of other planes-on item index ahead-patches
+        set index length ahead-patches
       ]
       
       set index index + 1
     ]
+    
     if collision-detected = true [
       set color orange
-      let rand random 1
-      ifelse rand = 0 [ 
+      let incoming-heading 0
+      ask incoming-plane [
+        set incoming-heading heading
+      ]
+      let incoming-heading-normalised incoming-heading - heading
+      if incoming-heading-normalised > 180 [ 
+        set incoming-heading-normalised incoming-heading-normalised - 360 
+      ]  ;; now -180 to 180
+      ifelse incoming-heading-normalised > 0 [ 
         right 15
       ] 
       [ 
@@ -377,11 +389,15 @@ to update-position
       set in-collision-course? false
     ]
     
-    if collision-detected = false [
+    ifelse collision-detected = false [
       facexy dest-x dest-y
       set color white
+      fd 0.1
     ]
-    fd 0.1
+    [
+      fd 0.05
+    ]
+    
   ]
 end
 
@@ -562,13 +578,13 @@ end
     <button x="10" y="10" height="50" disableUntilTicks="false" forever="false" kind="Observer" width="100" display="Setup">setup</button>
     <button x="120" y="10" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
     <slider x="10" step="1" y="80" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="20.0" variable="NumOfAirplanes"></slider>
-    <slider x="10" step="1" y="150" max="12" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="0.0" variable="NumOfAirTrafficControllers"></slider>
+    <slider x="10" step="1" y="150" max="12" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="12.0" variable="NumOfAirTrafficControllers"></slider>
     <monitor x="10" precision="0" y="220" height="60" fontSize="11" width="100" display="Airports">count patches with [is-airport?]</monitor>
     <monitor x="120" precision="0" y="220" height="60" fontSize="11" width="100" display="Controllers">count patches with [is-controller?]</monitor>
     <monitor x="10" precision="0" y="280" height="60" fontSize="11" width="100" display="Active Planes">count planes</monitor>
     <monitor x="120" precision="0" y="280" height="60" fontSize="11" width="100" display="Total Crashes">total-crashes</monitor>
-    <slider x="10" step="1" y="355" max="100" width="210" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="10.0" variable="AirTrafficControllerRange"></slider>
-    <slider x="10" step="1" y="415" max="10" width="210" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="2.0" variable="AircraftPerceptionRange"></slider>
+    <slider x="10" step="1" y="355" max="100" width="210" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="5.0" variable="AirTrafficControllerRange"></slider>
+    <slider x="10" step="1" y="415" max="10" width="210" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="1.0" variable="AircraftPerceptionRange"></slider>
   </widgets>
   <info>## WHAT IS IT?
 
