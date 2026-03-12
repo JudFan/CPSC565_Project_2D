@@ -351,10 +351,10 @@ to update-position
         set incoming-heading-normalised incoming-heading-normalised - 360 
       ]  ;; now -180 to 180
       ifelse incoming-heading-normalised > 0 [ 
-        right 15
+        left 15
       ] 
       [ 
-        left 15
+        right 15
       ]
     ]
     
