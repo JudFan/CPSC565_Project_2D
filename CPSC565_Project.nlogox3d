@@ -8,6 +8,8 @@ globals [
   airport-locations    ;; list of [x y name] for each airport
   controller-locations ;; list of [x y] for each ATC
   total-crashes        ;; total number of crash incidents
+  controllerFound      ;; boolean dictating if a controller can be built on a location (to ensure 2 ATCs are not built in the same location)
+  placed               ;; Number of ATCs placed so far
 ]
 
 patches-own [
@@ -23,22 +25,24 @@ patches-own [
 ]
 
 turtles-own [
-  origin-x            ;; starting airport x
-  origin-y            ;; starting airport y
-  origin-z            ;; starting airport z
-  dest-x              ;; destination airport x
-  dest-y              ;; destination airport y
-  dest-z              ;; destination airport z
-  dest                ;; destination airport patch
-  flight-progress     ;; 0.0 = just departed, 1.0 = arrived
-  flight-speed        ;; progress per tick (controls plane speed)
-  arc-factor          ;; curvature magnitude and direction of the path
-  crashed?            ;; flagged for removal after collision
-  in-collision-course?;; tracking if detected that another plane is in front of it (used by Air Traffic Controllers to warn planes)
-  ahead-patches       ;; their path forward
-  takeoff-allowed?    ;; boolean that ensures only 1 aircraft leaves an airport at a time
-  flight-altitude     ;; max altitude (above ground) for this plane's parabolic arc
-  total-distance      ;; total horizontal distance from origin to destination (used for arc progress)
+  origin-x                   ;; starting airport x
+  origin-y                   ;; starting airport y
+  origin-z                   ;; starting airport z
+  dest-x                     ;; destination airport x
+  dest-y                     ;; destination airport y
+  dest-z                     ;; destination airport z
+  dest                       ;; destination airport patch
+  flight-progress            ;; 0.0 = just departed, 1.0 = arrived
+  flight-speed               ;; progress per tick (controls plane speed)
+  arc-factor                 ;; curvature magnitude and direction of the path
+  crashed?                   ;; flagged for removal after collision
+  in-collision-course?       ;; tracking if detected that another plane is in front of it (used by Air Traffic Controllers to warn planes)
+  collision-self-detected    ;; tracking if plane itself detects a collision ahead
+  ahead-patches              ;; their path forward
+  takeoff-allowed?           ;; boolean that ensures only 1 aircraft leaves an airport at a time
+  flight-altitude            ;; max altitude (above ground) for this plane's parabolic arc
+  total-distance             ;; total horizontal distance from origin to destination (used for arc progress)
+  collision-avoidance-ticks  ;; Number of ticks spent to avoid a collision
 ]
 
 ;; Setup
@@ -289,10 +293,9 @@ to place-airports
     (list   6    0 -16 "DXB")    ;; Dubai, UAE
     (list  11    5 -16 "SVO")    ;; Moscow, Russia
     (list  15   -5 -16 "BOM")    ;; Mumbai, India
-    (list  20    7 -16 "PEK")    ;; Beijing, China
+    (list  20    5 -16 "PEK")    ;; Beijing, China
     (list  20    0 -16 "HKG")    ;; Hong Kong
     (list  29  -14 -16 "SYD")    ;; Sydney, Australia
-
  
   )
 
@@ -323,9 +326,8 @@ to place-controllers
   let height 3
   
   ;; Define ATC positions on land, spread around the map
-  ;; NOTE: These need adjustments -------------------------------------------
   set controller-locations (list
-    (list -27  18)    ;; Northern Canada ATC
+    (list -27  19)    ;; Northern Canada ATC
     (list -25   9)    ;; US East Coast ATC
     (list -18   4)    ;; Central America ATC
     (list -17 -12)    ;; South America ATC
@@ -340,13 +342,12 @@ to place-controllers
 
   ;; Only place up to NumOfAirTrafficControllers controllers
   let num-to-place min (list NumOfAirTrafficControllers length controller-locations)
-  let placed 0
+  set placed 0
 
   
   
   while [placed < num-to-place] [
-    let controllerFound false
-    
+    set controllerFound false
     let contr_location_length (length controller-locations)
     let randomIndex (random contr_location_length)
     let cx item 0 item randomIndex controller-locations
@@ -360,16 +361,16 @@ to place-controllers
         set is-controller? true
 
         set placed placed + 1
+        set controllerFound true
+        set controller-locations remove-item randomIndex controller-locations
         
       ]
       
-      set controllerFound true
-      set controller-locations remove-item randomIndex controller-locations
+      
     ]
     
     if controllerFound [
       let currentHeight 0
-      print(height)
       while [currentHeight <= height] [
         ask patch cx cy (-16 + currentHeight) [
           set pcolor blue
@@ -427,6 +428,7 @@ to spawn-airplanes
       set arc-factor (random-float 4 - 2)
       set crashed? false
       set in-collision-course? false
+      set collision-self-detected false
       set takeoff-allowed? false
       
       ;; Assign a random cruise altitude between the slider min and max
@@ -459,40 +461,6 @@ to update-position
   let delta-x dest-x - origin-x
   let delta-y dest-y - origin-y
   let d sqrt (delta-x * delta-x + delta-y * delta-y)
-
-  ;; Linear interpolation
-  ;let lx origin-x + t * delta-x
-  ;let ly origin-y + t * delta-y
-
-  ;; Add perpendicular arc offset: sin(t*π) peaks at midpoint → 0 at both ends
-  ;if d > 0 [
-    ;let perp-x (- delta-y / d)
-    ;let perp-y (  delta-x / d)
-    ;let offset sin (t * 180) * arc-factor
-    ;set lx lx + perp-x * offset
-    ;set ly ly + perp-y * offset
-  ;]
-
-  ;; Clamp to world bounds
-  ;set lx max (list (min-pxcor) (min (list max-pxcor lx)))
-  ;set ly max (list (min-pycor) (min (list max-pycor ly)))
-
-  ;setxy lx ly
-
-  ;; Face the direction of travel (look slightly ahead on the arc)
-  ;let t2 min (list 1.0 (t + 0.02))
-  ;let lx2 origin-x + t2 * delta-x
-  ;let ly2 origin-y + t2 * delta-y
-  ;if d > 0 [
-  ;  let perp-x2 (- delta-y / d)
-  ;  let perp-y2 (  delta-x / d)
-  ;  let offset2 sin (t2 * 180) * arc-factor
-  ;  set lx2 lx2 + perp-x2 * offset2
-  ;  set ly2 ly2 + perp-y2 * offset2
-  ;]
-  ;if (lx2 - xcor) != 0 or (ly2 - ycor) != 0 [
-  ;  facexy lx2 ly2
-  ;]
   
   if takeoff-allowed? [
     ;; Compute parabolic altitude: rises from ground at origin, peaks at midpoint, descends to ground at dest
@@ -510,11 +478,10 @@ to update-position
       patch-ahead (i + 1)
     ]
     let index 0
-    let collision-detected false
     
     while [index <  length ahead-patches] [
       if count other planes-on item index ahead-patches > 0 [
-        set collision-detected true
+        set collision-self-detected true
         set incoming-plane one-of other planes-on item index ahead-patches
         set index length ahead-patches
       ]
@@ -522,21 +489,34 @@ to update-position
       set index index + 1
     ]
     
-    if collision-detected = true [
+    if collision-self-detected = true and is-plane? incoming-plane [
       set color orange
       let incoming-heading 0
+      let incoming-pitch 0
       ask incoming-plane [
         set incoming-heading heading
+        set incoming-pitch pitch
       ]
       let incoming-heading-normalised incoming-heading - heading
+      let incoming-pitch-normalised incoming-pitch - pitch
       if incoming-heading-normalised > 180 [ 
         set incoming-heading-normalised incoming-heading-normalised - 360 
       ]  ;; now -180 to 180
+      if incoming-pitch-normalised > 180 [ 
+        set incoming-pitch-normalised incoming-pitch-normalised - 360 
+      ]  ;; now -180 to 180
       ifelse incoming-heading-normalised > 0 [ 
-        left 15
+        left 10
       ] 
       [ 
-        right 15
+        right 10
+      ]
+      
+      ifelse incoming-pitch-normalised > 0 [ 
+        set pitch pitch - 10
+      ] 
+      [ 
+        set pitch pitch + 10
       ]
     ]
     
@@ -545,29 +525,29 @@ to update-position
       set ahead-patches n-values AirTrafficControllerRange [ i ->
         patch-ahead (i + 1)
       ]
+      let collision-spot-detected false
       set index 0
-      set collision-detected false
       while [index <  length ahead-patches] [
         ask item index ahead-patches [
           let current-rgb ifelse-value (is-list? pcolor) 
                         [ pcolor ] 
           [ extract-rgb pcolor ]
           if item 0 current-rgb > 150 [
-            set collision-detected true
+            set collision-spot-detected true
           ]
         ]
         set index index + 1
       ]
-      if collision-detected = true [
+      if collision-spot-detected = true [
         set color orange
         let rand random 3
         (ifelse
           rand = 0 [ 
-            set pitch pitch + 10
+            set pitch pitch + 20
             ;;print("Up")
           ]
           rand = 1 [ 
-            set pitch pitch - 10
+            set pitch pitch - 20
             ;;print("down")
           ]
           ; default
@@ -579,16 +559,15 @@ to update-position
         (ifelse
           rand = 0 [ 
             ;;print("right")
-            right 30
+            right 20
           ]
           rand = 1 [ 
             ;;print("left")
-            left 30 
+            left 20 
           ]
         )
         
       ]
-      set in-collision-course? false
     ]
     
     ;; Compute a look-ahead z so the nose pitches up/down along the parabolic arc
@@ -599,18 +578,39 @@ to update-position
     set next-prog max (list 0 (min (list 1 next-prog)))
     let look-z -16 + flight-altitude * sin (next-prog * 180)
 
-    ifelse collision-detected = false [
-      facexy dest-x dest-y  ;; set horizontal heading toward destination
+    ifelse collision-self-detected = true
+    [
+      ;; heading already adjusted by avoidance turn; apply matching pitch
+      set collision-avoidance-ticks collision-avoidance-ticks - 1
+      if (collision-avoidance-ticks <= 0) [
+        set in-collision-course? false
+        set collision-self-detected false
+      ]
+    ]
+    [
+      let headingDest towardsxy dest-x dest-y  ;; set horizontal heading toward destination
+      let heading-diff (headingDest - heading) mod 360
+      if heading-diff > 180 [ set heading-diff heading-diff - 360 ]
+      ifelse abs heading-diff > 5 [
+        ;; Enable smooth turning
+        ifelse heading-diff > 0 [
+          right 5
+        ] [
+          left 5
+        ]
+      ] 
+      [
+        ;; Close enough, face exactly
+        facexy dest-x dest-y
+      ]
+      
       facexyz (xcor + look-ahead * sin heading) (ycor + look-ahead * cos heading) look-z  ;; add correct pitch
       set color white
       set roll 0
-      fd 0.1
+      
+      set collision-avoidance-ticks 5
     ]
-    [
-      ;; heading already adjusted by avoidance turn; apply matching pitch
-      facexyz (xcor + look-ahead * sin heading) (ycor + look-ahead * cos heading) look-z
-      fd 0.05
-    ]
+    fd 0.1
     
   ]
 end
@@ -766,7 +766,10 @@ to air-traffic-control-operations
                   if not is-airport? [
                     set legit-collision true
                     ;Marking the spots where a crash will occur to Orange
-                    set pcolor (list 255 165 0 255)
+                    
+                    if pzcor < -16 + AirTrafficControllerRange [
+                      set pcolor (list 255 165 0 255)
+                    ]
                   ]
                 ]
                 if legit-collision = true [
@@ -819,8 +822,8 @@ end
     <view3d wrappingAllowedZ="true" x="0" wrappingAllowedX="true" y="0" minPycor="-18" height="216" showTickCounter="true" patchSize="6.0" fontSize="10" wrappingAllowedY="true" width="360" tickCounterLabel="ticks" maxPycor="17" updateMode="0" frameRate="30.0" maxPzcor="16" maxPxcor="30" minPxcor="-29" minPzcor="-16"></view3d>
     <button x="25" y="20" height="50" disableUntilTicks="false" forever="false" kind="Observer" width="100" display="Setup">setup</button>
     <button x="140" y="20" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
-    <slider x="30" step="1" y="90" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="47.0" variable="NumOfAirplanes"></slider>
-    <slider x="30" step="1" y="165" max="12" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="3.0" variable="NumOfAirTrafficControllers"></slider>
+    <slider x="30" step="1" y="90" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="100.0" variable="NumOfAirplanes"></slider>
+    <slider x="30" step="1" y="165" max="11" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="11.0" variable="NumOfAirTrafficControllers"></slider>
     <slider x="30" step="1" y="425" max="10" width="210" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="4.0" variable="AircraftPerceptionRange"></slider>
     <slider x="30" step="1" y="490" max="16" width="210" display="MinFlightAltitude" height="50" min="0" direction="Horizontal" default="4.0" variable="MinFlightAltitude"></slider>
     <slider x="30" step="1" y="555" max="32" width="210" display="MaxFlightAltitude" height="50" min="1" direction="Horizontal" default="11.0" variable="MaxFlightAltitude"></slider>
