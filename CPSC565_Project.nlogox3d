@@ -282,18 +282,17 @@ to place-airports
     (list -20   -3 -16 "MEX")    ;; Mexico City
     (list -13  -12 -16 "GRU")    ;; São Paulo, Brazil
     (list -16  -15 -16 "EZE")    ;; Buenos Aires, Argentina
+    (list   2    4 -16 "LHR")    ;; London, UK
+    (list   6    3 -16 "CDG")    ;; Paris, France
+    (list   3   -1 -16 "CAI")    ;; Cairo, Egypt
+    (list   3  -12 -16 "JNB")    ;; Johannesburg, South Africa
+    (list   6    0 -16 "DXB")    ;; Dubai, UAE
+    (list  11    5 -16 "SVO")    ;; Moscow, Russia
+    (list  15   -5 -16 "BOM")    ;; Mumbai, India
+    (list  20    7 -16 "PEK")    ;; Beijing, China
+    (list  20    0 -16 "HKG")    ;; Hong Kong
     (list  29  -14 -16 "SYD")    ;; Sydney, Australia
-    
-    ; these airports aren't fixed yet, will do
-    (list   0   11 -16 "LHR")    ;; London, UK
-    (list   2    6 -16 "CDG")    ;; Paris, France
-    (list   4   -1 -16 "CAI")    ;; Cairo, Egypt
-    (list   4  -12 -16 "JNB")    ;; Johannesburg, South Africa
-    (list  10   -2 -16 "DXB")    ;; Dubai, UAE
-    (list  10    9 -16 "SVO")    ;; Moscow, Russia
-    (list  16   -1 -16 "BOM")    ;; Mumbai, India
-    (list  23    2 -16 "PEK")    ;; Beijing, China
-    (list  23   -1 -16 "HKG")    ;; Hong Kong
+
  
   )
 
@@ -324,6 +323,7 @@ to place-controllers
   let height 3
   
   ;; Define ATC positions on land, spread around the map
+  ;; NOTE: These need adjustments -------------------------------------------
   set controller-locations (list
     (list -27  18)    ;; Northern Canada ATC
     (list -25   9)    ;; US East Coast ATC
