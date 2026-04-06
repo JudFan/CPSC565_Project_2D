@@ -93,211 +93,173 @@ end
 
 to draw-continents
 
-  draw-landmass -23 24 -20 24
-  draw-landmass -16 24 -7 24
-  draw-landmass 3 24 3 24
-  draw-landmass 19 24 20 24
-  draw-landmass -25 23 -25 23
-  draw-landmass -22 23 -22 23
-  draw-landmass -20 23 -20 23
-  draw-landmass -17 23 -7 23
-  draw-landmass 1 23 2 23
-  draw-landmass 20 23 21 23
-  draw-landmass -20 22 -20 22
-  draw-landmass -17 22 -7 22
-  draw-landmass 2 22 3 22
-  draw-landmass -28 21 -28 21
-  draw-landmass -23 21 -23 21
-  draw-landmass -21 21 -20 21
-  draw-landmass -17 21 -6 21
-  draw-landmass 13 21 13 21
-  draw-landmass 21 21 21 21
-  draw-landmass -27 20 -26 20
-  draw-landmass -24 20 -24 20
-  draw-landmass -22 20 -22 20
-  draw-landmass -15 20 -7 20
-  draw-landmass 12 20 12 20
-  draw-landmass 19 20 23 20
-  draw-landmass 29 20 29 20
-  draw-landmass -27 19 -27 19
-  draw-landmass -22 19 -20 19
-  draw-landmass -14 19 -7 19
-  draw-landmass 11 19 11 19
-  draw-landmass 18 19 22 19
-  draw-landmass -29 18 -28 18
-  draw-landmass -23 18 -23 18
-  draw-landmass -14 18 -8 18
-  draw-landmass 10 18 10 18
-  draw-landmass 17 18 21 18
-  draw-landmass 26 18 26 18
-  draw-landmass -29 17 -26 17
-  draw-landmass -24 17 -24 17
-  draw-landmass -20 17 -19 17
-  draw-landmass -14 17 -7 17
-  draw-landmass 10 17 10 17
-  draw-landmass 16 17 26 17
-  draw-landmass 30 17 30 17
-  draw-landmass -27 16 -26 16
-  draw-landmass -23 16 -23 16
-  draw-landmass -21 16 -18 16
-  draw-landmass -13 16 -8 16
-  draw-landmass 4 16 4 16
-  draw-landmass 13 16 13 16
-  draw-landmass 15 16 26 16
-  draw-landmass 28 16 31 16
-  draw-landmass -37 15 -34 15
-  draw-landmass -31 15 -29 15
-  draw-landmass -27 15 -26 15
-  draw-landmass -24 15 -24 15
+  draw-landmass -18 18 -15 18
+  draw-landmass -10 18 -2 18
+  draw-landmass 8 18 9 18
+  draw-landmass -19 17 -19 17
+  draw-landmass -16 17 -16 17
+  draw-landmass -14 17 -14 17
+  draw-landmass -11 17 -2 17
+  draw-landmass 7 17 8 17
+  draw-landmass -14 16 -14 16
+  draw-landmass -11 16 -2 16
+  draw-landmass 8 16 9 16
+  draw-landmass -22 15 -22 15
   draw-landmass -18 15 -18 15
-  draw-landmass -13 15 -8 15
-  draw-landmass 2 15 5 15
-  draw-landmass 12 15 12 15
-  draw-landmass 15 15 37 15
-  draw-landmass -38 14 -28 14
-  draw-landmass -26 14 -26 14
-  draw-landmass -23 14 -21 14
-  draw-landmass -19 14 -17 14
-  draw-landmass -13 14 -10 14
-  draw-landmass 2 14 6 14
-  draw-landmass 9 14 38 14
-  draw-landmass -38 13 -22 13
-  draw-landmass -18 13 -18 13
-  draw-landmass -13 13 -11 13
-  draw-landmass -6 13 -6 13
-  draw-landmass 1 13 5 13
-  draw-landmass 7 13 37 13
-  draw-landmass 39 13 39 13
-  draw-landmass -37 12 -20 12
-  draw-landmass -18 12 -17 12
-  draw-landmass -13 12 -12 12
-  draw-landmass -6 12 -6 12
-  draw-landmass 0 12 2 12
-  draw-landmass 4 12 37 12
-  draw-landmass -38 11 -23 11
-  draw-landmass -19 11 -19 11
-  draw-landmass -12 11 -12 11
-  draw-landmass -1 11 1 11
-  draw-landmass 3 11 36 11
-  draw-landmass -37 10 -37 10
-  draw-landmass -32 10 -23 10
-  draw-landmass -19 10 -18 10
-  draw-landmass -2 10 -2 10
-  draw-landmass 0 10 1 10
-  draw-landmass 4 10 29 10
-  draw-landmass 32 10 32 10
-  draw-landmass 34 10 34 10
-  draw-landmass -31 9 -22 9
-  draw-landmass -19 9 -17 9
-  draw-landmass -3 9 -3 9
-  draw-landmass 1 9 1 9
-  draw-landmass 3 9 28 9
-  draw-landmass 33 9 33 9
-  draw-landmass -30 8 -21 8
-  draw-landmass -19 8 -16 8
-  draw-landmass -3 8 -3 8
-  draw-landmass 3 8 28 8
-  draw-landmass 33 8 33 8
-  draw-landmass -30 7 -21 7
-  draw-landmass -19 7 -15 7
-  draw-landmass -4 7 -4 7
-  draw-landmass -2 7 29 7
-  draw-landmass -29 6 -18 6
-  draw-landmass -2 6 29 6
-  draw-landmass -29 5 -21 5
-  draw-landmass -19 5 -17 5
-  draw-landmass -2 5 5 5
+  draw-landmass -16 15 -14 15
+  draw-landmass -11 15 -1 15
+  draw-landmass 17 15 17 15
+  draw-landmass -21 14 -20 14
+  draw-landmass -17 14 -17 14
+  draw-landmass -11 14 -3 14
+  draw-landmass 16 14 16 14
+  draw-landmass 22 14 24 14
+  draw-landmass -21 13 -21 13
+  draw-landmass -17 13 -15 13
+  draw-landmass -10 13 -3 13
+  draw-landmass 15 13 15 13
+  draw-landmass 21 13 23 13
+  draw-landmass -23 12 -22 12
+  draw-landmass -18 12 -18 12
+  draw-landmass -10 12 -4 12
+  draw-landmass 14 12 14 12
+  draw-landmass 20 12 22 12
+  draw-landmass 26 12 26 12
+  draw-landmass -23 11 -20 11
+  draw-landmass -18 11 -18 11
+  draw-landmass -15 11 -14 11
+  draw-landmass -10 11 -3 11
+  draw-landmass 14 11 14 11
+  draw-landmass 19 11 26 11
+  draw-landmass 28 11 28 11
+  draw-landmass -21 10 -20 10
+  draw-landmass -17 10 -17 10
+  draw-landmass -15 10 -13 10
+  draw-landmass -9 10 -4 10
+  draw-landmass 8 10 8 10
+  draw-landmass 16 10 16 10
+  draw-landmass 18 10 26 10
+  draw-landmass 27 10 29 10
+  draw-landmass -29 9 -27 9
+  draw-landmass -24 9 -23 9
+  draw-landmass -21 9 -20 9
+  draw-landmass -18 9 -18 9
+  draw-landmass -13 9 -13 9
+  draw-landmass -9 9 -4 9
+  draw-landmass 6 9 8 9
+  draw-landmass 15 9 15 9
+  draw-landmass 18 9 30 9
+  draw-landmass -29 8 -21 8
+  draw-landmass -19 8 -19 8
+  draw-landmass -17 8 -15 8
+  draw-landmass -13 8 -12 8
+  draw-landmass -9 8 -6 8
+  draw-landmass 6 8 9 8
+  draw-landmass 13 8 30 8
+  draw-landmass -29 7 -18 7
+  draw-landmass -13 7 -11 7
+  draw-landmass -9 7 -7 7
+  draw-landmass 6 7 10 7
+  draw-landmass 12 7 29 7
+  draw-landmass -28 6 -17 6
+  draw-landmass -13 6 -12 6
+  draw-landmass -8 6 -6 6
+  draw-landmass 5 6 6 6
+  draw-landmass 8 6 27 6
+  draw-landmass 29 6 29 6
+  draw-landmass -28 5 -18 5
+  draw-landmass -10 5 -9 5
+  draw-landmass -7 5 -6 5
+  draw-landmass 5 5 5 5
   draw-landmass 7 5 8 5
-  draw-landmass 11 5 28 5
-  draw-landmass -29 4 -18 4
-  draw-landmass -4 4 -2 4
+  draw-landmass 10 5 26 5
+  draw-landmass -28 4 -17 4
+  draw-landmass -9 4 -6 4
+  draw-landmass -4 4 -3 4
   draw-landmass 1 4 5 4
   draw-landmass 7 4 8 4
-  draw-landmass 10 4 27 4
-  draw-landmass 30 4 30 4
-  draw-landmass -29 3 -20 3
-  draw-landmass -3 3 -3 3
+  draw-landmass 10 4 25 4
+  draw-landmass 27 4 27 4
+  draw-landmass -27 3 -19 3
+  draw-landmass -8 3 -8 3
+  draw-landmass -4 3 -4 3
   draw-landmass 1 3 1 3
   draw-landmass 3 3 9 3
-  draw-landmass 11 3 24 3
-  draw-landmass 26 3 26 3
-  draw-landmass -28 2 -20 2
-  draw-landmass 6 2 24 2
-  draw-landmass 29 2 29 2
-  draw-landmass -27 1 -21 1
-  draw-landmass -2 1 0 1
-  draw-landmass 6 1 24 1
-  draw-landmass 28 1 28 1
-  draw-landmass -26 0 -24 0
-  draw-landmass -4 0 8 0
-  draw-landmass 10 0 24 0
-  draw-landmass -25 -1 -24 -1
-  draw-landmass -20 -1 -20 -1
-  draw-landmass -5 -1 5 -1
-  draw-landmass 7 -1 9 -1
-  draw-landmass 12 -1 24 -1
-  draw-landmass -25 -2 -23 -2
-  draw-landmass -19 -2 -19 -2
-  draw-landmass -5 -2 6 -2
-  draw-landmass 8 -2 11 -2
-  draw-landmass 14 -2 17 -2
-  draw-landmass 19 -2 21 -2
-  draw-landmass -23 -3 -22 -3
-  draw-landmass -5 -3 6 -3
-  draw-landmass 8 -3 9 -3
-  draw-landmass 15 -3 15 -3
-  draw-landmass 20 -3 21 -3
-  draw-landmass 23 -3 23 -3
-  draw-landmass 25 -3 25 -3
-  draw-landmass -21 -4 -20 -4
-  draw-landmass -5 -4 7 -4
-  draw-landmass 15 -4 15 -4
-  draw-landmass 20 -4 22 -4
+  draw-landmass 11 3 23 3
+  draw-landmass 25 3 25 3
+  draw-landmass -26 2 -19 2
+  draw-landmass 6 2 23 2
+  draw-landmass 27 2 27 2
+  draw-landmass -25 1 -20 1
+  draw-landmass -4 1 -2 1
+  draw-landmass 6 1 23 1
+  draw-landmass 26 1 26 1
+  draw-landmass -24 0 -22 0
+  draw-landmass -6 0 7 0
+  draw-landmass 9 0 23 0
+  draw-landmass -23 -1 -22 -1
+  draw-landmass -18 -1 -18 -1
+  draw-landmass -6 -1 4 -1
+  draw-landmass 6 -1 8 -1
+  draw-landmass 11 -1 23 -1
+  draw-landmass -23 -2 -21 -2
+  draw-landmass -17 -2 -17 -2
+  draw-landmass -6 -2 5 -2
+  draw-landmass 7 -2 10 -2
+  draw-landmass 13 -2 16 -2
+  draw-landmass 18 -2 20 -2
+  draw-landmass -21 -3 -20 -3
+  draw-landmass -6 -3 5 -3
+  draw-landmass 7 -3 8 -3
+  draw-landmass 14 -3 14 -3
+  draw-landmass 19 -3 20 -3
+  draw-landmass 22 -3 22 -3
+  draw-landmass 24 -3 24 -3
+  draw-landmass -20 -4 -19 -4
+  draw-landmass -6 -4 6 -4
+  draw-landmass 14 -4 14 -4
+  draw-landmass 19 -4 21 -4
   draw-landmass -19 -5 -16 -5
-  draw-landmass -4 -5 8 -5
-  draw-landmass 16 -5 16 -5
+  draw-landmass -5 -5 7 -5
+  draw-landmass 15 -5 15 -5
   draw-landmass -19 -6 -14 -6
-  draw-landmass 0 -6 7 -6
-  draw-landmass 20 -6 21 -6
-  draw-landmass -19 -7 -12 -7
-  draw-landmass 0 -7 6 -7
-  draw-landmass 21 -7 21 -7
-  draw-landmass 23 -7 23 -7
-  draw-landmass 29 -7 29 -7
-  draw-landmass -20 -8 -10 -8
-  draw-landmass 2 -8 6 -8
-  draw-landmass 22 -8 22 -8
-  draw-landmass 29 -8 30 -8
-  draw-landmass -19 -9 -11 -9
-  draw-landmass 2 -9 6 -9
-  draw-landmass -18 -10 -11 -10
-  draw-landmass 1 -10 6 -10
-  draw-landmass 9 -10 9 -10
-  draw-landmass 27 -10 28 -10
-  draw-landmass -17 -11 -11 -11
-  draw-landmass 1 -11 5 -11
-  draw-landmass 8 -11 8 -11
-  draw-landmass 26 -11 30 -11
+  draw-landmass 0 -6 6 -6
+  draw-landmass 19 -6 20 -6
+  draw-landmass -19 -7 -13 -7
+  draw-landmass 0 -7 5 -7
+  draw-landmass 20 -7 20 -7
+  draw-landmass 22 -7 22 -7
+  draw-landmass 27 -7 27 -7
+  draw-landmass -20 -8 -11 -8
+  draw-landmass 1 -8 5 -8
+  draw-landmass 21 -8 21 -8
+  draw-landmass 27 -8 28 -8
+  draw-landmass -19 -9 -12 -9
+  draw-landmass 1 -9 5 -9
+  draw-landmass -18 -10 -12 -10
+  draw-landmass 0 -10 5 -10
+  draw-landmass 8 -10 8 -10
+  draw-landmass 25 -10 26 -10
+  draw-landmass -17 -11 -12 -11
+  draw-landmass 0 -11 4 -11
+  draw-landmass 7 -11 7 -11
+  draw-landmass 24 -11 28 -11
   draw-landmass -17 -12 -13 -12
-  draw-landmass 2 -12 5 -12
-  draw-landmass 8 -12 8 -12
-  draw-landmass 24 -12 31 -12
+  draw-landmass 1 -12 4 -12
+  draw-landmass 7 -12 7 -12
+  draw-landmass 22 -12 29 -12
   draw-landmass -17 -13 -13 -13
-  draw-landmass 2 -13 5 -13
-  draw-landmass 24 -13 32 -13
+  draw-landmass 1 -13 4 -13
+  draw-landmass 22 -13 30 -13
   draw-landmass -18 -14 -14 -14
-  draw-landmass 4 -14 4 -14
-  draw-landmass 24 -14 26 -14
-  draw-landmass 28 -14 32 -14
+  draw-landmass 3 -14 3 -14
+  draw-landmass 22 -14 24 -14
+  draw-landmass 26 -14 30 -14
   draw-landmass -18 -15 -15 -15
-  draw-landmass 29 -15 31 -15
+  draw-landmass 27 -15 29 -15
   draw-landmass -18 -16 -16 -16
-  draw-landmass 30 -16 30 -16
+  draw-landmass 28 -16 28 -16
   draw-landmass -18 -17 -17 -17
-  draw-landmass -18 -18 -17 -18
-  draw-landmass -18 -19 -17 -19
-  draw-landmass -18 -20 -18 -20
-  draw-landmass -17 -21 -17 -21
 
 end
 
@@ -318,22 +280,22 @@ end
 to place-airports
   ;; Define airport locations: [x y "name"]
   set airport-locations (list
-    (list -27    8 -16 "YYC")    ;; Calgary, Canada
-    (list -19    4 -16 "JFK")    ;; New York, USA
-    (list -29    3 -16 "LAX")    ;; Los Angeles, USA
-    (list -24   -1 -16 "MEX")    ;; Mexico City
+    (list -24    4 -16 "YYC")    ;; Calgary, Canada
+    (list -25    2 -16 "JFK")    ;; New York, USA
+    (list -22    1 -16 "LAX")    ;; Los Angeles, USA
+    (list -20   -3 -16 "MEX")    ;; Mexico City
     (list -13  -12 -16 "GRU")    ;; São Paulo, Brazil
     (list -16  -15 -16 "EZE")    ;; Buenos Aires, Argentina
-    (list   0   11 -16 "LHR")    ;; London, UK
-    (list   2    6 -16 "CDG")    ;; Paris, France
-    (list   4   -1 -16 "CAI")    ;; Cairo, Egypt
-    (list   4  -12 -16 "JNB")    ;; Johannesburg, South Africa
-    (list  10   -2 -16 "DXB")    ;; Dubai, UAE
-    (list  10    9 -16 "SVO")    ;; Moscow, Russia
-    (list  16   -1 -16 "BOM")    ;; Mumbai, India
-    (list  23    2 -16 "PEK")    ;; Beijing, China
-    (list  23   -1 -16 "HKG")    ;; Hong Kong
-    (list  31  -14 -16 "SYD")    ;; Sydney, Australia
+    (list   2    4 -16 "LHR")    ;; London, UK
+    (list   6    3 -16 "CDG")    ;; Paris, France
+    (list   3   -1 -16 "CAI")    ;; Cairo, Egypt
+    (list   3  -12 -16 "JNB")    ;; Johannesburg, South Africa
+    (list   6    0 -16 "DXB")    ;; Dubai, UAE
+    (list  11    5 -16 "SVO")    ;; Moscow, Russia
+    (list  15   -5 -16 "BOM")    ;; Mumbai, India
+    (list  20    5 -16 "PEK")    ;; Beijing, China
+    (list  20    0 -16 "HKG")    ;; Hong Kong
+    (list  29  -14 -16 "SYD")    ;; Sydney, Australia
  
   )
 
@@ -857,7 +819,7 @@ end
 
 ]]></code>
   <widgets>
-    <view3d wrappingAllowedZ="true" x="0" wrappingAllowedX="true" y="0" minPycor="-23" height="434" showTickCounter="true" patchSize="6.0" fontSize="10" wrappingAllowedY="true" width="434" tickCounterLabel="ticks" maxPycor="24" updateMode="0" frameRate="30.0" maxPzcor="16" maxPxcor="40" minPxcor="-39" minPzcor="-16"></view3d>
+    <view3d wrappingAllowedZ="true" x="0" wrappingAllowedX="true" y="0" minPycor="-18" height="216" showTickCounter="true" patchSize="6.0" fontSize="10" wrappingAllowedY="true" width="360" tickCounterLabel="ticks" maxPycor="17" updateMode="0" frameRate="30.0" maxPzcor="16" maxPxcor="30" minPxcor="-29" minPzcor="-16"></view3d>
     <button x="25" y="20" height="50" disableUntilTicks="false" forever="false" kind="Observer" width="100" display="Setup">setup</button>
     <button x="140" y="20" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
     <slider x="30" step="1" y="90" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="100.0" variable="NumOfAirplanes"></slider>
