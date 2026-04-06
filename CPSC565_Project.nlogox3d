@@ -8,6 +8,8 @@ globals [
   airport-locations    ;; list of [x y name] for each airport
   controller-locations ;; list of [x y] for each ATC
   total-crashes        ;; total number of crash incidents
+  controllerFound      ;; boolean dictating if a controller can be built on a location (to ensure 2 ATCs are not built in the same location)
+  placed               ;; Number of ATCs placed so far
 ]
 
 patches-own [
@@ -363,7 +365,7 @@ to place-controllers
   
   ;; Define ATC positions on land, spread around the map
   set controller-locations (list
-    (list -27  18)    ;; Northern Canada ATC
+    (list -27  19)    ;; Northern Canada ATC
     (list -25   9)    ;; US East Coast ATC
     (list -18   4)    ;; Central America ATC
     (list -17 -12)    ;; South America ATC
@@ -378,13 +380,12 @@ to place-controllers
 
   ;; Only place up to NumOfAirTrafficControllers controllers
   let num-to-place min (list NumOfAirTrafficControllers length controller-locations)
-  let placed 0
+  set placed 0
 
   
   
   while [placed < num-to-place] [
-    let controllerFound false
-    
+    set controllerFound false
     let contr_location_length (length controller-locations)
     let randomIndex (random contr_location_length)
     let cx item 0 item randomIndex controller-locations
@@ -398,16 +399,16 @@ to place-controllers
         set is-controller? true
 
         set placed placed + 1
+        set controllerFound true
+        set controller-locations remove-item randomIndex controller-locations
         
       ]
       
-      set controllerFound true
-      set controller-locations remove-item randomIndex controller-locations
+      
     ]
     
     if controllerFound [
       let currentHeight 0
-      print(height)
       while [currentHeight <= height] [
         ask patch cx cy (-16 + currentHeight) [
           set pcolor blue
@@ -543,10 +544,10 @@ to update-position
         set incoming-pitch-normalised incoming-pitch-normalised - 360 
       ]  ;; now -180 to 180
       ifelse incoming-heading-normalised > 0 [ 
-        left 20
+        left 10
       ] 
       [ 
-        right 20
+        right 10
       ]
       
       ifelse incoming-pitch-normalised > 0 [ 
@@ -596,11 +597,11 @@ to update-position
         (ifelse
           rand = 0 [ 
             ;;print("right")
-            right 30
+            right 20
           ]
           rand = 1 [ 
             ;;print("left")
-            left 30 
+            left 20 
           ]
         )
         
@@ -626,15 +627,14 @@ to update-position
     ]
     [
       let headingDest towardsxy dest-x dest-y  ;; set horizontal heading toward destination
-      set headingDest headingDest mod 360
-      if headingDest > 180 [ set headingDest headingDest - 360 ]
-      print(headingDest)
-      ifelse abs headingDest > 50 [
+      let heading-diff (headingDest - heading) mod 360
+      if heading-diff > 180 [ set heading-diff heading-diff - 360 ]
+      ifelse abs heading-diff > 5 [
         ;; Enable smooth turning
-        ifelse headingDest > 0 [
-          right 10
+        ifelse heading-diff > 0 [
+          right 5
         ] [
-          left 10
+          left 5
         ]
       ] 
       [
@@ -804,7 +804,10 @@ to air-traffic-control-operations
                   if not is-airport? [
                     set legit-collision true
                     ;Marking the spots where a crash will occur to Orange
-                    set pcolor (list 255 165 0 255)
+                    
+                    if pzcor < -16 + AirTrafficControllerRange [
+                      set pcolor (list 255 165 0 255)
+                    ]
                   ]
                 ]
                 if legit-collision = true [
@@ -857,8 +860,8 @@ end
     <view3d wrappingAllowedZ="true" x="0" wrappingAllowedX="true" y="0" minPycor="-23" height="434" showTickCounter="true" patchSize="6.0" fontSize="10" wrappingAllowedY="true" width="434" tickCounterLabel="ticks" maxPycor="24" updateMode="0" frameRate="30.0" maxPzcor="16" maxPxcor="40" minPxcor="-39" minPzcor="-16"></view3d>
     <button x="25" y="20" height="50" disableUntilTicks="false" forever="false" kind="Observer" width="100" display="Setup">setup</button>
     <button x="140" y="20" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
-    <slider x="30" step="1" y="90" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="1.0" variable="NumOfAirplanes"></slider>
-    <slider x="30" step="1" y="165" max="12" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="0.0" variable="NumOfAirTrafficControllers"></slider>
+    <slider x="30" step="1" y="90" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="100.0" variable="NumOfAirplanes"></slider>
+    <slider x="30" step="1" y="165" max="11" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="11.0" variable="NumOfAirTrafficControllers"></slider>
     <slider x="30" step="1" y="425" max="10" width="210" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="4.0" variable="AircraftPerceptionRange"></slider>
     <slider x="30" step="1" y="490" max="16" width="210" display="MinFlightAltitude" height="50" min="0" direction="Horizontal" default="4.0" variable="MinFlightAltitude"></slider>
     <slider x="30" step="1" y="555" max="32" width="210" display="MaxFlightAltitude" height="50" min="1" direction="Horizontal" default="11.0" variable="MaxFlightAltitude"></slider>
