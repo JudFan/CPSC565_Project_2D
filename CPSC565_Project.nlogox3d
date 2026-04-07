@@ -327,17 +327,18 @@ to place-controllers
   
   ;; Define ATC positions on land, spread around the map
   set controller-locations (list
-    (list -27  19)    ;; Northern Canada ATC
-    (list -25   9)    ;; US East Coast ATC
-    (list -18   4)    ;; Central America ATC
-    (list -17 -12)    ;; South America ATC
+    (list -23  11)    ;; Northern Canada ATC
+    (list -20   2)    ;; US East Coast ATC
+    (list -19   -5)    ;; Central America ATC
+    (list -15 -13)    ;; South America ATC
     (list   7   9)    ;; European ATC
-    (list   5  -4)    ;; Central Africa ATC
-    (list  15   4)    ;; Middle East ATC
-    (list  20  18)    ;; Russia West ATC
-    (list  30  12)    ;; East Asia ATC
-    (list  24   1)    ;; South Asia ATC
-    (list  30 -13)    ;; Australia ATC
+    (list   -3  -4)    ;; Central Africa ATC
+    (list  16   6)      ;; Russia West ATC
+    (list  9  0)     ;; Middle East ATC
+    (list  26  6)    ;; East Asia ATC
+    (list  19   -6)    ;; South Asia ATC
+    (list  24 -13)    ;; Australia ATC
+    (list -6 13)     ;; Atlantic ATC
   )
 
   ;; Only place up to NumOfAirTrafficControllers controllers
@@ -353,7 +354,7 @@ to place-controllers
     let cx item 0 item randomIndex controller-locations
     let cy item 1 item randomIndex controller-locations
     ask patch cx cy -16 [
-      if is-land? and not is-airport? and not is-controller? [
+      if not is-airport? and not is-controller? [
         set pcolor blue
         let rgbVer extract-rgb pcolor
         set pcolor (list item 0 rgbVer item 1 rgbVer item 2 rgbVer 255)
@@ -823,7 +824,7 @@ end
     <button x="25" y="20" height="50" disableUntilTicks="false" forever="false" kind="Observer" width="100" display="Setup">setup</button>
     <button x="140" y="20" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
     <slider x="30" step="1" y="90" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="100.0" variable="NumOfAirplanes"></slider>
-    <slider x="30" step="1" y="165" max="11" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="11.0" variable="NumOfAirTrafficControllers"></slider>
+    <slider x="30" step="1" y="165" max="12" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="12.0" variable="NumOfAirTrafficControllers"></slider>
     <slider x="30" step="1" y="425" max="10" width="210" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="4.0" variable="AircraftPerceptionRange"></slider>
     <slider x="30" step="1" y="490" max="16" width="210" display="MinFlightAltitude" height="50" min="0" direction="Horizontal" default="4.0" variable="MinFlightAltitude"></slider>
     <slider x="30" step="1" y="555" max="32" width="210" display="MaxFlightAltitude" height="50" min="1" direction="Horizontal" default="11.0" variable="MaxFlightAltitude"></slider>
