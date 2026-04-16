@@ -10,6 +10,8 @@ globals [
   total-crashes        ;; total number of crash incidents
   controllerFound      ;; boolean dictating if a controller can be built on a location (to ensure 2 ATCs are not built in the same location)
   placed               ;; Number of ATCs placed so far
+  safelandings         ;; number of planes that made a safe journey from origin to destination
+  closecalls           ;; number of planes that nearly crashed
 ]
 
 patches-own [
@@ -43,12 +45,15 @@ turtles-own [
   flight-altitude            ;; max altitude (above ground) for this plane's parabolic arc
   total-distance             ;; total horizontal distance from origin to destination (used for arc progress)
   collision-avoidance-ticks  ;; Number of ticks spent to avoid a collision
+  danger?             ;; boolean determining if the plane is too close to another plane
 ]
 
 ;; Setup
 to setup
   clear-all
-  set total-crashes 0
+  set total-crashes 0  
+  set safelandings 0
+  set closecalls 0
 
   ;; Step 1: Paint the ocean (blue background)
   ask patches [
@@ -431,6 +436,7 @@ to spawn-airplanes
       set in-collision-course? false
       set collision-self-detected false
       set takeoff-allowed? false
+      set danger? false
       
       ;; Assign a random cruise altitude between the slider min and max
       let alt-range (MaxFlightAltitude - MinFlightAltitude)
@@ -623,8 +629,9 @@ to move-planes
     set flight-progress flight-progress + flight-speed
 
     ;; If arrived at destination (close enough horizontally), pick a new one and continue flying
-    if distancexy dest-x dest-y < 1.0 [
+    if distancexy dest-x dest-y < 0.5 [
       let new-dest one-of airport-locations
+      set safelandings safelandings + 1
       while [item 0 new-dest = dest-x and item 1 new-dest = dest-y] [
         set new-dest one-of airport-locations
       ]
@@ -662,6 +669,24 @@ to check-collisions
       set crash-occured? true
     ]
   ]
+  
+  ;; Check if planes are closer to each other by distance 1, classify as close call
+  ask planes [
+    let closest-one min-one-of other planes [distance myself]
+    if closest-one != nobody [
+      let dist distance closest-one
+      ifelse dist < 1 and not crashed? and not danger? [
+        set closecalls closecalls + 1
+        set danger? true
+      ]
+      [
+       if dist >= 1 [
+          set danger? false
+       ]
+      ]
+    ]
+  ]
+  
   ;; Remove crashed planes
   ask planes with [crashed?] [ die ]
   
@@ -821,18 +846,44 @@ end
 ]]></code>
   <widgets>
     <view3d wrappingAllowedZ="true" x="0" wrappingAllowedX="true" y="0" minPycor="-18" height="216" showTickCounter="true" patchSize="6.0" fontSize="10" wrappingAllowedY="true" width="360" tickCounterLabel="ticks" maxPycor="17" updateMode="0" frameRate="30.0" maxPzcor="16" maxPxcor="30" minPxcor="-29" minPzcor="-16"></view3d>
-    <button x="25" y="20" height="50" disableUntilTicks="false" forever="false" kind="Observer" width="100" display="Setup">setup</button>
-    <button x="140" y="20" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
-    <slider x="30" step="1" y="90" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="100.0" variable="NumOfAirplanes"></slider>
-    <slider x="30" step="1" y="165" max="12" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="12.0" variable="NumOfAirTrafficControllers"></slider>
-    <slider x="30" step="1" y="425" max="10" width="210" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="3.0" variable="AircraftPerceptionRange"></slider>
-    <slider x="30" step="1" y="490" max="16" width="210" display="MinFlightAltitude" height="50" min="0" direction="Horizontal" default="4.0" variable="MinFlightAltitude"></slider>
     <slider x="30" step="1" y="555" max="32" width="210" display="MaxFlightAltitude" height="50" min="1" direction="Horizontal" default="11.0" variable="MaxFlightAltitude"></slider>
-    <slider x="30" step="1" y="365" max="16" width="210" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="9.0" variable="AirTrafficControllerRange"></slider>
     <monitor x="140" precision="0" y="290" height="60" fontSize="11" width="100" display="Total Crashes">total-crashes</monitor>
     <monitor x="30" precision="0" y="290" height="60" fontSize="11" width="100" display="Active Planes">count planes</monitor>
     <monitor x="140" precision="0" y="230" height="60" fontSize="11" width="100" display="Controllers">count patches with [is-controller?]</monitor>
     <monitor x="30" precision="0" y="230" height="60" fontSize="11" width="100" display="Airports">count patches with [is-airport?]</monitor>
+    <plot x="425" autoPlotX="true" yMax="100.0" autoPlotY="true" yAxis="Total Crashes" y="270" xMin="0.0" height="270" legend="false" xMax="50.0" yMin="0.0" width="725" xAxis="Time (ticks)" display="Total Crashes vs Time">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="default" color="-2674135" legend="true">
+        <setup></setup>
+        <update>plot total-crashes</update>
+      </pen>
+    </plot>
+    <plot x="795" autoPlotX="true" yMax="100.0" autoPlotY="true" yAxis="Close Encounters" y="15" xMin="0.0" height="250" legend="false" xMax="50.0" yMin="0.0" width="355" xAxis="Time (ticks)" display="Close Encounters vs Time">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="default" color="-4079321" legend="true">
+        <setup></setup>
+        <update>plot closecalls</update>
+      </pen>
+    </plot>
+    <plot x="425" autoPlotX="true" yMax="50.0" autoPlotY="true" yAxis="Safe landings" y="15" xMin="0.0" height="250" legend="false" xMax="50.0" yMin="0.0" width="365" xAxis="Time (ticks)" display="Safe Landings vs Time">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="default" color="-13840069" legend="true">
+        <setup></setup>
+        <update>plot safelandings</update>
+      </pen>
+    </plot>
+    <slider x="30" step="1" y="365" max="16" width="330" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="9.0" variable="AirTrafficControllerRange"></slider>
+    <slider x="30" step="1" y="425" max="10" width="330" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="3.0" variable="AircraftPerceptionRange"></slider>
+    <slider x="30" step="1" y="490" max="16" width="330" display="MinFlightAltitude" height="50" min="0" direction="Horizontal" default="4.0" variable="MinFlightAltitude"></slider>
+    <slider x="30" step="1" y="90" max="100" width="330" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="100.0" variable="NumOfAirplanes"></slider>
+    <slider x="30" step="1" y="165" max="12" width="330" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="12.0" variable="NumOfAirTrafficControllers"></slider>
+    <button x="215" y="20" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="145" display="Go">go</button>
+    <button x="25" y="20" height="50" disableUntilTicks="false" forever="false" kind="Observer" width="165" display="Setup">setup</button>
+    <monitor x="250" precision="17" y="290" height="60" fontSize="11" width="110" display="Close Encounters">closecalls</monitor>
+    <monitor x="250" precision="17" y="230" height="60" fontSize="11" width="110" display="Safe Landings">safelandings</monitor>
   </widgets>
   <info>## WHAT IS IT?
 

@@ -8,6 +8,8 @@ globals [
   airport-locations    ;; list of [x y name] for each airport
   controller-locations ;; list of [x y] for each ATC
   total-crashes        ;; total number of crash incidents
+  safelandings         ;; number of planes that made a safe journey from origin to destination
+  closecalls           ;; number of planes that nearly crashed
 ]
 
 patches-own [
@@ -35,12 +37,15 @@ turtles-own [
   in-collision-course?;; tracking if detected that another plane is in front of it (used by Air Traffic Controllers to warn planes)
   ahead-patches       ;; their path forward
   takeoff-allowed?    ;; boolean that ensures only 1 aircraft leaves an airport at a time
+  danger?             ;; boolean determining if the plane is too close to another plane
 ]
 
 ;; Setup
 to setup
   clear-all
   set total-crashes 0
+  set safelandings 0
+  set closecalls 0
 
   ;; Step 1: Paint the ocean (blue background)
   ask patches [
@@ -264,6 +269,7 @@ to spawn-airplanes
       set crashed? false
       set in-collision-course? false
       set takeoff-allowed? false
+      set danger? false
       
       ;; Set location at the airport
       setxy origin-x origin-y
@@ -410,6 +416,7 @@ to move-planes
     ;; If arrived at destination, pick a new one and continue flying
     ;if flight-progress >= 1 [
     if patch-here = dest [
+      set safelandings safelandings + 1
       let new-dest one-of airport-locations
       while [item 0 new-dest = dest-x and item 1 new-dest = dest-y] [
         set new-dest one-of airport-locations
@@ -438,6 +445,23 @@ to check-collisions
       set total-crashes total-crashes + 1
       ask nearby [ set crashed? true ]
       set crash-occured? true
+    ]
+  ]
+  
+  ;; Check if planes are closer to each other by distance 1, classify as close call
+  ask planes [
+    let closest-one min-one-of other planes [distance myself]
+    if closest-one != nobody [
+      let dist distance closest-one
+      ifelse dist < 1 and not crashed? and not danger? [
+        set closecalls closecalls + 1
+        set danger? true
+      ]
+      [
+       if dist >= 1 [
+          set danger? false
+       ]
+      ]
     ]
   ]
   ;; Remove crashed planes
@@ -574,17 +598,43 @@ end
 
 ]]></code>
   <widgets>
-    <view x="240" wrappingAllowedX="true" y="10" frameRate="30.0" minPycor="-16" height="530" showTickCounter="true" patchSize="16.0" fontSize="10" wrappingAllowedY="true" width="530" tickCounterLabel="ticks" maxPycor="16" updateMode="1" maxPxcor="16" minPxcor="-16"></view>
+    <view x="260" wrappingAllowedX="true" y="10" frameRate="30.0" minPycor="-16" height="530" showTickCounter="true" patchSize="16.0" fontSize="10" wrappingAllowedY="true" width="530" tickCounterLabel="ticks" maxPycor="16" updateMode="1" maxPxcor="16" minPxcor="-16"></view>
     <button x="10" y="10" height="50" disableUntilTicks="false" forever="false" kind="Observer" width="100" display="Setup">setup</button>
-    <button x="120" y="10" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
-    <slider x="10" step="1" y="80" max="100" width="210" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="20.0" variable="NumOfAirplanes"></slider>
-    <slider x="10" step="1" y="150" max="12" width="210" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="12.0" variable="NumOfAirTrafficControllers"></slider>
-    <monitor x="10" precision="0" y="220" height="60" fontSize="11" width="100" display="Airports">count patches with [is-airport?]</monitor>
-    <monitor x="120" precision="0" y="220" height="60" fontSize="11" width="100" display="Controllers">count patches with [is-controller?]</monitor>
-    <monitor x="10" precision="0" y="280" height="60" fontSize="11" width="100" display="Active Planes">count planes</monitor>
-    <monitor x="120" precision="0" y="280" height="60" fontSize="11" width="100" display="Total Crashes">total-crashes</monitor>
-    <slider x="10" step="1" y="355" max="100" width="210" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="5.0" variable="AirTrafficControllerRange"></slider>
-    <slider x="10" step="1" y="415" max="10" width="210" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="1.0" variable="AircraftPerceptionRange"></slider>
+    <monitor x="10" precision="0" y="220" height="60" fontSize="11" width="110" display="Airports">count patches with [is-airport?]</monitor>
+    <monitor x="10" precision="0" y="280" height="60" fontSize="11" width="110" display="Active Planes">count planes</monitor>
+    <monitor x="10" precision="17" y="345" height="60" fontSize="11" width="110" display="Safe Landings">safelandings</monitor>
+    <monitor x="120" precision="17" y="345" height="60" fontSize="11" width="110" display="Close Encounters">closecalls</monitor>
+    <monitor x="120" precision="0" y="280" height="60" fontSize="11" width="110" display="Total Crashes">total-crashes</monitor>
+    <monitor x="120" precision="0" y="220" height="60" fontSize="11" width="110" display="Controllers">count patches with [is-controller?]</monitor>
+    <slider x="10" step="1" y="80" max="100" width="220" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="100.0" variable="NumOfAirplanes"></slider>
+    <slider x="10" step="1" y="150" max="12" width="220" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="0.0" variable="NumOfAirTrafficControllers"></slider>
+    <button x="130" y="10" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
+    <slider x="10" step="1" y="435" max="100" width="220" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="5.0" variable="AirTrafficControllerRange"></slider>
+    <slider x="10" step="1" y="490" max="10" width="220" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="1.0" variable="AircraftPerceptionRange"></slider>
+    <plot x="800" autoPlotX="true" yMax="50.0" autoPlotY="true" yAxis="Safe landings" y="10" xMin="0.0" height="250" legend="false" xMax="50.0" yMin="0.0" width="365" xAxis="Time (ticks)" display="Safe Landings vs Time">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="default" color="-13840069" legend="true">
+        <setup></setup>
+        <update>plot safelandings</update>
+      </pen>
+    </plot>
+    <plot x="1170" autoPlotX="true" yMax="100.0" autoPlotY="true" yAxis="Close Encounters" y="10" xMin="0.0" height="250" legend="false" xMax="50.0" yMin="0.0" width="355" xAxis="Time (ticks)" display="Close Encounters vs Time">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="default" color="-4079321" legend="true">
+        <setup></setup>
+        <update>plot closecalls</update>
+      </pen>
+    </plot>
+    <plot x="800" autoPlotX="true" yMax="100.0" autoPlotY="true" yAxis="Total Crashes" y="265" xMin="0.0" height="270" legend="false" xMax="50.0" yMin="0.0" width="725" xAxis="Time (ticks)" display="Total Crashes vs Time">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="default" color="-2674135" legend="true">
+        <setup></setup>
+        <update>plot total-crashes</update>
+      </pen>
+    </plot>
   </widgets>
   <info>## WHAT IS IT?
 
