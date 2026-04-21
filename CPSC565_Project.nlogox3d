@@ -846,7 +846,6 @@ end
 ]]></code>
   <widgets>
     <view3d wrappingAllowedZ="true" x="0" wrappingAllowedX="true" y="0" minPycor="-18" height="216" showTickCounter="true" patchSize="6.0" fontSize="10" wrappingAllowedY="true" width="360" tickCounterLabel="ticks" maxPycor="17" updateMode="0" frameRate="30.0" maxPzcor="16" maxPxcor="30" minPxcor="-29" minPzcor="-16"></view3d>
-    <slider x="30" step="1" y="555" max="32" width="210" display="MaxFlightAltitude" height="50" min="1" direction="Horizontal" default="11.0" variable="MaxFlightAltitude"></slider>
     <monitor x="140" precision="0" y="290" height="60" fontSize="11" width="100" display="Total Crashes">total-crashes</monitor>
     <monitor x="30" precision="0" y="290" height="60" fontSize="11" width="100" display="Active Planes">count planes</monitor>
     <monitor x="140" precision="0" y="230" height="60" fontSize="11" width="100" display="Controllers">count patches with [is-controller?]</monitor>
@@ -875,15 +874,16 @@ end
         <update>plot safelandings</update>
       </pen>
     </plot>
-    <slider x="30" step="1" y="365" max="16" width="330" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="9.0" variable="AirTrafficControllerRange"></slider>
+    <slider x="30" step="1" y="365" max="16" width="330" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="6.0" variable="AirTrafficControllerRange"></slider>
     <slider x="30" step="1" y="425" max="10" width="330" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="3.0" variable="AircraftPerceptionRange"></slider>
-    <slider x="30" step="1" y="490" max="16" width="330" display="MinFlightAltitude" height="50" min="0" direction="Horizontal" default="4.0" variable="MinFlightAltitude"></slider>
+    <slider x="30" step="1" y="490" max="16" width="330" display="MinFlightAltitude" height="50" min="0" direction="Horizontal" default="3.0" variable="MinFlightAltitude"></slider>
     <slider x="30" step="1" y="90" max="100" width="330" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="100.0" variable="NumOfAirplanes"></slider>
     <slider x="30" step="1" y="165" max="12" width="330" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="12.0" variable="NumOfAirTrafficControllers"></slider>
     <button x="215" y="20" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="145" display="Go">go</button>
     <button x="25" y="20" height="50" disableUntilTicks="false" forever="false" kind="Observer" width="165" display="Setup">setup</button>
     <monitor x="250" precision="17" y="290" height="60" fontSize="11" width="110" display="Close Encounters">closecalls</monitor>
     <monitor x="250" precision="17" y="230" height="60" fontSize="11" width="110" display="Safe Landings">safelandings</monitor>
+    <slider x="30" step="1" y="555" max="32" width="330" display="MaxFlightAltitude" height="50" min="1" direction="Horizontal" default="18.0" variable="MaxFlightAltitude"></slider>
   </widgets>
   <info>## WHAT IS IT?
 
