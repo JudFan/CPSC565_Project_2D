@@ -609,8 +609,6 @@ end
     <slider x="10" step="1" y="80" max="100" width="220" display="NumOfAirplanes" height="50" min="0" direction="Horizontal" default="100.0" variable="NumOfAirplanes"></slider>
     <slider x="10" step="1" y="150" max="12" width="220" display="NumOfAirTrafficControllers" height="50" min="0" direction="Horizontal" default="0.0" variable="NumOfAirTrafficControllers"></slider>
     <button x="130" y="10" height="50" disableUntilTicks="true" forever="true" kind="Observer" width="100" display="Go">go</button>
-    <slider x="10" step="1" y="435" max="100" width="220" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="5.0" variable="AirTrafficControllerRange"></slider>
-    <slider x="10" step="1" y="490" max="10" width="220" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="1.0" variable="AircraftPerceptionRange"></slider>
     <plot x="800" autoPlotX="true" yMax="50.0" autoPlotY="true" yAxis="Safe landings" y="10" xMin="0.0" height="250" legend="false" xMax="50.0" yMin="0.0" width="365" xAxis="Time (ticks)" display="Safe Landings vs Time">
       <setup></setup>
       <update></update>
@@ -635,6 +633,8 @@ end
         <update>plot total-crashes</update>
       </pen>
     </plot>
+    <slider x="10" step="1" y="410" max="100" width="220" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="5.0" variable="AirTrafficControllerRange"></slider>
+    <slider x="10" step="1" y="465" max="10" width="220" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="1.0" variable="AircraftPerceptionRange"></slider>
   </widgets>
   <info>## WHAT IS IT?
 
