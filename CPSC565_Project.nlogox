@@ -636,54 +636,156 @@ end
     <slider x="10" step="1" y="410" max="100" width="220" display="AirTrafficControllerRange" height="50" min="0" direction="Horizontal" default="5.0" variable="AirTrafficControllerRange"></slider>
     <slider x="10" step="1" y="465" max="10" width="220" display="AircraftPerceptionRange" height="50" min="0" direction="Horizontal" default="1.0" variable="AircraftPerceptionRange"></slider>
   </widgets>
-  <info>## WHAT IS IT?
+  <info><![CDATA[# Modeling Air Traffic: 2D Simulation
+## Julian Fan - Elda Britu - Harshini Poluri
 
-A 2D simulation of global air traffic with realistic curved flight paths and collision detection.
-Part of CPSC 565 Emergent Systems - Group 4 (Julian Fan, Elda Britu, Harshini Poluri).
+This model simulates global air traffic on a simplified 2D world map. Airplanes continuously fly between 16 real-world airports, following direct heading-based paths. The simulation models two layers of collision avoidance: **onboard aircraft perception**, where each plane scans the patches directly ahead of it and steers away from any plane it detects; and **Air Traffic Controller (ATC) stations**, which monitor a wider radius around them, predict flight path intersections, mark danger zones red, and alert planes to adjust heading. The goal is to explore how these two emergent safety mechanisms, local and global, affect crash rates, close calls, and safe landing counts at varying traffic densities.
+
 
 ## HOW IT WORKS
 
-- **Green patches** = land (continents)
-- **Yellow patches** = airports (labeled with IATA codes)
-- **Red patches** = Air Traffic Controller (ATC) stations
-- **White airplane turtles** = active flights
+### The World
 
-Each airplane is assigned a random origin and destination airport. It follows a **curved arc path** (a great-circle approximation) rather than a straight line. The arc direction and curvature vary randomly per flight segment, producing varied, realistic-looking routes.
+The 33×33 patch grid is painted to represent a simplified world map:
 
-When a plane arrives at its destination it immediately picks a new destination and continues flying, keeping the skies perpetually busy.
+- **Blue patches** - ocean
+- **Green patches** - land (continents: North America, South America, Europe, Africa, Asia, Australia)
+- **Yellow patches** - airports, labeled with their IATA codes (e.g., YYC, JFK, LHR, SYD). There are 16 airports total.
+- **Red patches** - Air Traffic Controller (ATC) stations, placed on land between airports. Up to 12 ATC stations can be placed, controlled by the **NumOfAirTrafficControllers** slider.
 
-**Collision detection**: at each tick, any patch occupied by two or more airplanes triggers a crash — all involved planes despawn and the crash counter increments.
+### Airplanes
 
-## HOW TO USE IT
+Each airplane turtle is assigned a random origin and destination airport at spawn. Planes fly by facing their destination patch each tick (`facexy`) and moving forward by 0.1 patches. Speed varies slightly between planes (0.003–0.008 progress units per tick). When a plane reaches its destination, it immediately picks a new random destination and continues flying and keeping the skies perpetually busy.
 
-1. Set **NumOfAirplanes** and **NumOfAirTrafficControllers** with the sliders.
-2. Click **Setup** to generate the map.
-3. Click **Go** to start the simulation.
-4. Watch the **Active Planes** and **Total Crashes** monitors.
+**Takeoff queuing**: Only one plane per airport is permitted to take off at a time. Planes queue at their origin airport and the first in line is granted `takeoff-allowed? true` each tick.
+
+### Aircraft Self-Avoidance (Local Perception)
+
+Each tick, an active plane scans the `AircraftPerceptionRange` patches directly ahead of it. If another plane is detected in those patches:
+
+- The plane turns orange to signal a near-miss.
+- It compares headings with the incoming plane and turns 15° left or right to avoid a head-on path.
+- It advances at half speed (0.05 instead of 0.1) while evading.
+
+### Air Traffic Control (ATC)
+
+Each ATC station (red patch) scans all planes within its `AirTrafficControllerRange` radius. When two or more planes are detected nearby, the ATC compares the forward trajectories of every pair. If any pair shares a patch in their projected paths:
+
+- That patch is painted **red** as a visual danger marker.
+- Both planes have their `in-collision-course?` flag set to `true`.
+
+On the next tick, flagged planes re-scan their ahead-patches looking for red patches. If a red patch is found, the plane turns 30° (randomly left or right) to reroute. Patches gradually fade back to their original color via the `color-correct` procedure, which incrementally shifts each patch's RGB values toward their original recorded values.
+
+### Collision Detection and Crashes
+
+At each tick, every non-airport patch is checked for two or more planes occupying the same location. If found:
+
+- All involved planes are marked `crashed?` and immediately removed.
+- The crash counter increments by 1.
+- The patch flashes **black** briefly before color-correcting back.
+
+**Close calls** are tracked separately: any two planes that come within distance 1 of each other (without actually crashing) increment the close encounters counter. A plane can only trigger one close-call event per near-miss encounter.
+
+
+### Sliders
+
+<table border="1" cellspacing="0" cellpadding="6" style="color: white; background-color: black;">
+  <thead>
+    <tr>
+      <th>Slider</th>
+      <th>Range</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>NumOfAirplanes</strong></td>
+      <td>0–100</td>
+      <td>Target number of active planes in the simulation</td>
+    </tr>
+    <tr>
+      <td><strong>NumOfAirTrafficControllers</strong></td>
+      <td>0–12</td>
+      <td>Number of ATC stations placed on the map at setup</td>
+    </tr>
+    <tr>
+      <td><strong>AirTrafficControllerRange</strong></td>
+      <td>0–100</td>
+      <td>Radius (in patches) that each ATC station monitors for planes and projects flight paths</td>
+    </tr>
+    <tr>
+      <td><strong>AircraftPerceptionRange</strong></td>
+      <td>0–10</td>
+      <td>Number of patches ahead each plane scans for other planes each tick</td>
+    </tr>
+  </tbody>
+</table>
+
+### Buttons
+
+- **Setup** — Clears the world, draws the map, places airports and ATC stations, and resets all counters. Must be run before Go.
+- **Go** *(forever)* — Starts the simulation loop: spawns planes, runs takeoff logic, runs ATC operations, moves planes, checks collisions, and updates colors each tick.
+
+### Monitors
+
+<table border="1" cellspacing="0" cellpadding="6" style="color: white; background-color: black;">
+  <thead>
+    <tr>
+      <th>Monitor</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Airports</strong></td>
+      <td>Number of airport patches on the map (always 16)</td>
+    </tr>
+    <tr>
+      <td><strong>Controllers</strong></td>
+      <td>Number of active ATC station patches</td>
+    </tr>
+    <tr>
+      <td><strong>Active Planes</strong></td>
+      <td>Current number of live planes in the simulation</td>
+    </tr>
+    <tr>
+      <td><strong>Total Crashes</strong></td>
+      <td>Cumulative number of crash events since Setup</td>
+    </tr>
+    <tr>
+      <td><strong>Safe Landings</strong></td>
+      <td>Cumulative number of planes that successfully reached a destination</td>
+    </tr>
+    <tr>
+      <td><strong>Close Encounters</strong></td>
+      <td>Cumulative number of near-miss events (distance &lt; 1 between planes)</td>
+    </tr>
+  </tbody>
+</table>
+
+### Plots
+
+- **Safe Landings vs Time** — Tracks cumulative safe landings over ticks (green line).
+- **Close Encounters vs Time** — Tracks cumulative close encounters over ticks (teal line).
+- **Total Crashes vs Time** — Tracks cumulative crashes over ticks (red line).
 
 ## THINGS TO NOTICE
 
-- Flight arcs curve naturally due to the perpendicular arc offset (sin-based midpoint bulge).
-- Planes face their direction of travel at all times.
-- Increasing plane density raises collision frequency.
+- With **no ATC** and **no aircraft perception** (both ranges at 0), crashes increase linearly with plane density.
+- When **AircraftPerceptionRange** is increased, planes self-correct at close range but may cluster in avoidance spirals at very high densities.
+- ATC stations mark predicted collision paths red — watch these red flashes appear and fade as planes reroute.
+- The **close encounters counter** often rises faster than crashes, revealing near-misses the avoidance system *almost* prevented.
+- Airports act as safe zones — crashes cannot be triggered on airport patches, so busy airports briefly protect planes while queuing.
+- The **color-correct** procedure causes crash sites (temporarily black) to gradually fade back to their original ocean or land color over several ticks.
+
 
 ## THINGS TO TRY
 
-- Crank **NumOfAirplanes** to 80–100 and watch crash rates climb.
-- Reduce to 5–10 and observe sparse long-haul routes.
-
-## EXTENDING THE MODEL
-
-- Give ATC stations an influence radius that reroutes nearby planes to avoid collisions.
-- Add altitude layers to reduce collision probability.
-- Color-code planes by region or airline.
-- Log crash locations to a heatmap.
-
-## CREDITS AND REFERENCES
-
-CPSC 565 Emergent Systems - University of Calgary
-Group 4: Julian Fan, Elda Britu (30158734), Harshini Poluri (30188914)
-</info>
+- Set **NumOfAirplanes** to 100 and all avoidance settings to 0 — observe a crash-heavy baseline.
+- Incrementally increase **AircraftPerceptionRange** from 1 to 10 and compare crash rates at the same plane density.
+- Add ATC stations one at a time and watch crash and close-call trends change relative to safe landings.
+- Try a high **AirTrafficControllerRange** (50+) with only 2–3 ATC stations and compare to many stations with a small range.
+- Compare the three plots simultaneously to see how interventions shift the crash-to-landing ratio.]]></info>
   <turtleShapes>
     <shape name="default" rotatable="true" editableColorIndex="0">
       <polygon color="-1920102913" filled="true" marked="true">
