@@ -885,54 +885,178 @@ end
     <monitor x="250" precision="17" y="230" height="60" fontSize="11" width="110" display="Safe Landings">safelandings</monitor>
     <slider x="30" step="1" y="555" max="32" width="330" display="MaxFlightAltitude" height="50" min="1" direction="Horizontal" default="18.0" variable="MaxFlightAltitude"></slider>
   </widgets>
-  <info>## WHAT IS IT?
+  <info><![CDATA[# Modeling Air Traffic: 3D Simulation
+## Julian Fan - Elda Britu - Harshini Poluri
 
-A 3D simulation of global air traffic with realistic curved flight paths and collision detection.
-Part of CPSC 565 Emergent Systems - Group 4 (Julian Fan, Elda Britu, Harshini Poluri).
+This is the **3D extension** of the CPSC 565 global air traffic simulation. It lifts the 2D model into a full three-dimensional world: planes now take off from ground level, climb along a parabolic arc to a cruising altitude, and descend back to ground at their destination. Collision avoidance operates in all three axes; planes adjust both horizontal heading and vertical pitch when evading. The 3D environment also makes altitude separation a natural emergent safety mechanism: planes assigned different cruise altitudes are less likely to conflict even on intersecting routes.
+
+The two safety layers from the 2D model are preserved: **onboard aircraft perception** (each plane scans patches directly ahead and steers away from detected traffic) and **Air Traffic Controller (ATC) stations** (ground stations that predict trajectory intersections over a wider radius and alert planes to reroute). This version explores whether altitude variation meaningfully reduces collisions compared to the flat 2D case.
+
 
 ## HOW IT WORKS
 
-- **Green patches** = land (continents)
-- **Yellow patches** = airports (labeled with IATA codes)
-- **Red patches** = Air Traffic Controller (ATC) stations
-- **White airplane turtles** = active flights
+### The World
 
-Each airplane is assigned a random origin and destination airport. It follows a **curved arc path** (a great-circle approximation) rather than a straight line. The arc direction and curvature vary randomly per flight segment, producing varied, realistic-looking routes.
+The simulation uses a large 3D patch grid (X: −29 to 30, Y: −18 to 17, Z: −16 to 16). The ground plane is fixed at Z = −16, where all land, ocean, airports, and ATC bases are painted. The space above Z = −16 is open sky where planes fly their altitude arcs.
 
-When a plane arrives at its destination it immediately picks a new destination and continues flying, keeping the skies perpetually busy.
+- **Blue patches (Z = −16)** — ocean
+- **Green patches (Z = −16)** — land, drawn as a detailed pixel-art world map across all major continents
+- **Yellow patches (Z = −16)** — airports, labeled with IATA codes. There are 16 airports total.
+- **Blue column patches (Z = −16 up to Z = −13)** — ATC stations, rendered as vertical pillars 3 patches tall with an "ATC" label at the top. Up to 12 can be placed, controlled by the **NumOfAirTrafficControllers** slider.
 
-**Collision detection**: at each tick, any patch occupied by two or more airplanes triggers a crash — all involved planes despawn and the crash counter increments.
+### Airplanes
+
+Each plane is assigned a random origin and destination airport at spawn. On each tick it smoothly turns toward its destination (up to 5° per tick), ensuring gradual banking rather than snapping. When it comes within 0.5 horizontal distance of the destination, it picks a new destination and continues flying immediately — keeping the skies perpetually busy.
+
+**Takeoff queuing**: Only one plane per airport patch is permitted to move each tick. Planes wait at their origin with `takeoff-allowed? false` until they reach the front of the queue, then receive `takeoff-allowed? true` and begin flight.
+
+### Parabolic Altitude Arcs
+
+The key visual difference from the 2D model is vertical flight. Each flight leg is assigned a random cruise altitude between **MinFlightAltitude** and **MaxFlightAltitude** (measured in patches above ground level, i.e. above Z = −16). The plane's Z position each tick follows a sine-based parabola:
+
+`target-z = -16 + flight-altitude × sin(horiz-progress × 180°)`
+
+This produces a smooth arc: the plane takes off at ground level (Z = −16), rises to its cruise altitude at the flight midpoint, then descends back to Z = −16 at the destination. A look-ahead calculation adjusts the plane's pitch continuously so the nose points correctly up or down along the arc at all times.
+
+### Aircraft Self-Avoidance (Local Perception, 3D)
+
+Each active plane scans the `AircraftPerceptionRange` patches directly ahead of it each tick. If another plane is detected:
+
+- The plane turns orange.
+- It compares **both heading and pitch** with the detected plane, normalizing to −180°–180°.
+- It adjusts heading by 10° left or right (based on relative heading difference).
+- It adjusts pitch by 10° up or down (based on relative pitch difference).
+- It enters a `collision-avoidance-ticks` countdown (5 ticks). During this window it holds its avoidance heading and does not resume normal navigation until the countdown expires.
+
+### Air Traffic Control (ATC, 3D)
+
+Each ATC station scans planes within its `AirTrafficControllerRange` radius **and** within altitude `pzcor < −16 + AirTrafficControllerRange`. When two or more planes are detected, the ATC compares every pair's projected forward paths. If any pair share the same patch in their lookahead:
+
+- That patch is painted **orange** as a visual danger marker (in the 2D model this was red).
+- Both planes have `in-collision-course?` set to `true`.
+
+On the next tick, flagged planes re-scan their ahead-patches for orange patches. If found, the plane makes a **random 3D evasive maneuver**: it randomly pitches up 20°, pitches down 20°, or holds pitch; and independently turns left 20° or right 20°. Danger patches gradually fade back to their original color via `color-correct`.
+
+### Collision Detection and Crashes
+
+Any non-airport patch occupied by 2 or more planes in the same tick triggers a crash — all involved planes despawn and the crash counter increments. The crash patch flashes **red** (using full RGBA color) before fading back via `color-correct`. All colors in this model use 4-component RGBA values (including transparency), which also allows non-ground patches to fade to fully transparent as their temporary color dissipates.
+
+**Close calls** track any two planes coming within distance 1 of each other (in 3D space) without crashing. A plane can only register one close-call event per encounter.
+
 
 ## HOW TO USE IT
 
-1. Set **NumOfAirplanes** and **NumOfAirTrafficControllers** with the sliders.
-2. Click **Setup** to generate the map.
-3. Click **Go** to start the simulation.
-4. Watch the **Active Planes** and **Total Crashes** monitors.
+### Sliders
+
+<table border="1" cellspacing="0" cellpadding="6" style="color: white; background-color: black;">
+ <thead>
+    <tr>
+      <th>Slider</th>
+      <th>Range</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>NumOfAirplanes</strong></td>
+      <td>0–100</td>
+      <td>Target number of active planes in the simulation</td>
+    </tr>
+    <tr>
+      <td><strong>NumOfAirTrafficControllers</strong></td>
+      <td>0–12</td>
+      <td>Number of ATC stations placed at setup</td>
+    </tr>
+    <tr>
+      <td><strong>AirTrafficControllerRange</strong></td>
+      <td>0–16</td>
+      <td>Radius (patches) each ATC monitors for planes and projected paths; also caps the altitude ceiling of ATC awareness</td>
+    </tr>
+    <tr>
+      <td><strong>AircraftPerceptionRange</strong></td>
+      <td>0–10</td>
+      <td>Number of patches ahead each plane scans for other planes each tick</td>
+    </tr>
+    <tr>
+      <td><strong>MinFlightAltitude</strong></td>
+      <td>0–16</td>
+      <td>Minimum cruise altitude (patches above ground) assigned to any flight leg</td>
+    </tr>
+    <tr>
+      <td><strong>MaxFlightAltitude</strong></td>
+      <td>1–32</td>
+      <td>Maximum cruise altitude (patches above ground) assigned to any flight leg</td>
+    </tr>
+  </tbody>
+</table>
+
+### Buttons
+
+- **Setup** — Clears the world, draws the 3D map, places airports and ATC columns, resets all counters. Must be run before Go.
+- **Go** *(forever)* — Runs the simulation loop each tick: spawn planes, takeoff queuing, ATC operations, move planes, collision detection, crash flash, color correction.
+
+### Monitors
+
+<table border="1" cellspacing="0" cellpadding="6" style="color: white; background-color: black;">
+    <thead>
+    <tr>
+      <th>Monitor</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Airports</strong></td>
+      <td>Number of airport patches (always 16)</td>
+    </tr>
+    <tr>
+      <td><strong>Controllers</strong></td>
+      <td>Number of ATC patches currently on the map</td>
+    </tr>
+    <tr>
+      <td><strong>Active Planes</strong></td>
+      <td>Current live plane count</td>
+    </tr>
+    <tr>
+      <td><strong>Total Crashes</strong></td>
+      <td>Cumulative crash events since Setup</td>
+    </tr>
+    <tr>
+      <td><strong>Safe Landings</strong></td>
+      <td>Cumulative successful arrivals since Setup</td>
+    </tr>
+    <tr>
+      <td><strong>Close Encounters</strong></td>
+      <td>Cumulative near-miss events (3D distance &lt; 1)</td>
+    </tr>
+  </tbody>
+</table>
+
+### Plots
+
+- **Safe Landings vs Time** — Cumulative safe landings over ticks (green line).
+- **Close Encounters vs Time** — Cumulative close encounters over ticks (teal line).
+- **Total Crashes vs Time** — Cumulative crashes over ticks (red line).
 
 ## THINGS TO NOTICE
 
-- Flight arcs curve naturally due to the perpendicular arc offset (sin-based midpoint bulge).
-- Planes face their direction of travel at all times.
-- Increasing plane density raises collision frequency.
+- Planes visibly climb and descend along their parabolic arcs. Short routes barely gain altitude while long intercontinental routes reach high cruise levels.
+- The plane's nose pitches up during climb and down during descent thanks to the look-ahead pitch calculation.
+- With a wide altitude range (e.g. Min = 1, Max = 32), planes naturally separate vertically and crash rates drop even without ATC or aircraft perception, as an emergent effect of altitude diversity.
+- With a narrow altitude band (Min ≈ Max), all planes fly at roughly the same height, similar to the 2D model, and collision rates rise.
+- ATC danger zones flash orange (not red as in the 2D version). Watch them appear and fade as planes reroute.
+- The 3D avoidance maneuver is randomized; a plane warned by ATC may pitch up, pitch down, or hold level, and independently turn left or right. This non-determinism occasionally produces spiral or looping paths.
+- The `collision-avoidance-ticks` mechanism means a plane holds its avoidance course for 5 ticks even if the threat has passed, which can occasionally cause unnecessary path deviations.
+- Planes must be within both the horizontal radius and the altitude ceiling of an ATC station to be monitored. High-flying planes above the ATC altitude ceiling are effectively invisible to ground controllers.
+
 
 ## THINGS TO TRY
 
-- Crank **NumOfAirplanes** to 80–100 and watch crash rates climb.
-- Reduce to 5–10 and observe sparse long-haul routes.
-
-## EXTENDING THE MODEL
-
-- Give ATC stations an influence radius that reroutes nearby planes to avoid collisions.
-- Add altitude layers to reduce collision probability.
-- Color-code planes by region or airline.
-- Log crash locations to a heatmap.
-
-## CREDITS AND REFERENCES
-
-CPSC 565 Emergent Systems - University of Calgary
-Group 4: Julian Fan, Elda Britu (30158734), Harshini Poluri (30188914)
-</info>
+- Set Min and Max flight altitude equal (e.g. both = 5) to force all planes to the same cruise level. Compare crash rates to the 2D model under the same plane density.
+- Gradually widen the altitude band and observe at what spread crashes begin to drop significantly.
+- Compare high **AircraftPerceptionRange** (e.g. 8–10) with high **AirTrafficControllerRange**. Which layer provides better protection at high traffic density?
+- Run with 100 planes, no ATC, and no aircraft perception to establish a baseline crash rate, then add each mechanism independently.
+- Set **MaxFlightAltitude** above **AirTrafficControllerRange** so high-altitude planes escape ATC coverage. Watch whether crashes cluster among those unmonitored flights.]]></info>
   <turtleShapes>
     <shape name="default" rotatable="true" editableColorIndex="0">
       <polygon color="-1920102913" filled="true" marked="true">
