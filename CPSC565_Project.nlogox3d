@@ -902,7 +902,7 @@ The simulation uses a large 3D patch grid (X: −29 to 30, Y: −18 to 17, Z: �
 - **Blue patches (Z = −16)** — ocean
 - **Green patches (Z = −16)** — land, drawn as a detailed pixel-art world map across all major continents
 - **Yellow patches (Z = −16)** — airports, labeled with IATA codes. There are 16 airports total.
-- **Blue column patches (Z = −16 up to Z = −13)** — ATC stations, rendered as vertical pillars 3 patches tall with an "ATC" label at the top. Up to 12 can be placed, controlled by the **NumOfAirTrafficControllers** slider.
+- **Dark Blue column patches (Z = −16 up to Z = −13)** — ATC stations, rendered as vertical pillars 3 patches tall with an "ATC" label at the top. Up to 12 can be placed, controlled by the **NumOfAirTrafficControllers** slider.
 
 ### Airplanes
 
